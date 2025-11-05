@@ -12,43 +12,66 @@ import org.slf4j.LoggerFactory;
 
 public class OreUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger("oreminer");
-
-    int MAX_BULK = 1024;
-
     private static final String MOD_ID = "oreminer";
 
-    // カスタムタグ (data/oreminer/tags/blocks/ores.json を用意する想定)
+    // カスタムタグ (data/oreminer/tags/blocks/ores.json)
     public static final TagKey<Block> OREMINER_ORES =
             TagKey.of(RegistryKeys.BLOCK, Identifier.of(MOD_ID, "ores"));
 
-    public static boolean isPickaxe(ItemStack stack){
-
-        if(stack == null || stack.isEmpty()) return false;
-
-        //タグで判定する
-        try{
-            if(stack.isIn(ItemTags.PICKAXES)) return true;
-        }catch (Throwable ignored){
-            //見送る
+    /**
+     * アイテムがつるはしかどうかを判定
+     */
+    public static boolean isPickaxe(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            return false;
         }
-        // フォールバック：クラス名に "pick" が含まれるかどうか
+
+        // タグで判定
         try {
-            String cls = stack.getItem().getClass().getSimpleName().toLowerCase();
-            return cls.contains("pick");
-        } catch (Throwable ignored) {}
+            if (stack.isIn(ItemTags.PICKAXES)) {
+                return true;
+            }
+        } catch (Throwable e) {
+            LOGGER.warn("Failed to check pickaxe tag", e);
+        }
+
+        // フォールバック：クラス名チェック
+        try {
+            String itemName = stack.getItem().toString().toLowerCase();
+            String className = stack.getItem().getClass().getSimpleName().toLowerCase();
+            return itemName.contains("pickaxe") || className.contains("pick");
+        } catch (Throwable e) {
+            LOGGER.warn("Failed to check pickaxe by name", e);
+        }
 
         return false;
     }
 
-
-    //鉱石かどうかを判定
-    public static boolean isOre(BlockState blockState) {
-        if(blockState == null) return false;
-        try {
-            return blockState.isIn(OREMINER_ORES);
-        }catch(Throwable e){
-            //見送る
+    /**
+     * ブロックが鉱石かどうかを判定
+     */
+    public static boolean isOre(BlockState state) {
+        if (state == null || state.isAir()) {
+            return false;
         }
+
+        try {
+            // カスタムタグで判定
+            if (state.isIn(OREMINER_ORES)) {
+                return true;
+            }
+        } catch (Throwable e) {
+            LOGGER.warn("Failed to check ore tag for {}", state.getBlock(), e);
+        }
+
+        // フォールバック：ブロック名に"ore"が含まれるか
+        try {
+            String blockName = state.getBlock().toString().toLowerCase();
+            return blockName.contains("ore") || blockName.contains("debris");
+        } catch (Throwable e) {
+            LOGGER.warn("Failed to check ore by name", e);
+        }
+
         return false;
     }
 }

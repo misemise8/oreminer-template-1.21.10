@@ -2,6 +2,7 @@ package net.misemise;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
+import net.minecraft.block.BlockState;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -15,53 +16,34 @@ public class OreMiner implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
-		// BEFORE: つるはしでないなら破壊をキャンセル
-		PlayerBlockBreakEvents.BEFORE.register((world, player, pos, state, entity) -> {
-			return OreUtils.isPickaxe(player.getMainHandStack());
-		});
+		LOGGER.info("OreMiner initialized!");
 
-		// AFTER: デバッグ付き（これを1つだけ残す）
+		// AFTERイベント：鉱石の一括破壊
 		PlayerBlockBreakEvents.AFTER.register((world, player, pos, state, entity) -> {
-			LOGGER.info("(dbg) AFTER fired for player={}, pos={}, state={}",
-					player.getName().getString(), pos, state);
+			// クライアント側では何もしない
+			if (world.isClient()) return;
 
-			if (world.isClient()) {
-				LOGGER.info("(dbg) world.isClient == true -> returning");
-				return;
-			}
-			LOGGER.info("(dbg) world.isClient == false");
-
-			if (!(world instanceof ServerWorld serverWorld)) {
-				LOGGER.info("(dbg) world is NOT ServerWorld -> returning");
-				return;
-			} else {
-				LOGGER.info("(dbg) cast to ServerWorld ok");
-			}
-
-			if (!(player instanceof ServerPlayerEntity serverPlayer)) {
-				LOGGER.info("(dbg) player is NOT ServerPlayerEntity -> returning");
-				return;
-			} else {
-				LOGGER.info("(dbg) cast to ServerPlayerEntity ok");
-			}
+			// サーバー側のチェック
+			if (!(world instanceof ServerWorld serverWorld)) return;
+			if (!(player instanceof ServerPlayerEntity serverPlayer)) return;
 
 			ItemStack held = serverPlayer.getMainHandStack();
-			boolean isPick = OreUtils.isPickaxe(held);
-			LOGGER.info("(dbg) heldItem={}, isPickaxe={}", held.getItem().toString(), isPick);
-			if (!isPick) {
-				LOGGER.info("(dbg) not a pickaxe -> returning");
+
+			// つるはしでない場合はスキップ
+			if (!OreUtils.isPickaxe(held)) {
 				return;
 			}
 
-			boolean isOre = OreUtils.isOre(state);
-			LOGGER.info("(dbg) isOre={}", isOre);
-			if (!isOre) {
-				LOGGER.info("(dbg) not ore -> returning");
+			// 鉱石でない場合はスキップ
+			if (!OreUtils.isOre(state)) {
 				return;
 			}
 
-			LOGGER.info("(dbg) calling OreBreaker.breakConnectedOres(...)");
-			OreBreaker.breakConnectedOres(serverWorld, pos, serverPlayer, held);
+			LOGGER.info("Starting vein mining at {} for player {}",
+					pos, serverPlayer.getName().getString());
+
+			// 隣接する鉱石を一括破壊（最初のブロックは既に壊れている）
+			OreBreaker.breakConnectedOres(serverWorld, pos, state, serverPlayer, held);
 		});
 	}
 }

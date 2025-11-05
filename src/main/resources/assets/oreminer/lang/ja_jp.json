@@ -5,5 +5,8 @@
   "config.oreminer.searchDiagonal": "斜め探索",
   "config.oreminer.autoCollect": "自動回収",
   "config.oreminer.autoCollectExp": "経験値自動回収",
-  "config.oreminer.debugLog": "デバッグログ"
+  "config.oreminer.debugLog": "デバッグログ",
+
+  "key.oreminer.veinminer": "一括採掘 (長押し)",
+  "category.oreminer": "OreMiner"
 }

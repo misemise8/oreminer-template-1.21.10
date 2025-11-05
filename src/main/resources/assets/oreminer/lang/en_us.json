@@ -5,5 +5,8 @@
   "config.oreminer.searchDiagonal": "Search Diagonal",
   "config.oreminer.autoCollect": "Auto Collect",
   "config.oreminer.autoCollectExp": "Auto Collect Experience",
-  "config.oreminer.debugLog": "Debug Log"
+  "config.oreminer.debugLog": "Debug Log",
+
+  "key.oreminer.veinminer": "Vein Miner (Hold)",
+  "category.oreminer": "OreMiner"
 }

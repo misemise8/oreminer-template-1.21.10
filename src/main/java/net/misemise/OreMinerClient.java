@@ -1,13 +1,20 @@
 package net.misemise;
 
 import net.fabricmc.api.ClientModInitializer;
-import me.shedaniel.autoconfig.AutoConfig;
-import me.shedaniel.autoconfig.serializer.GsonConfigSerializer;
-import net.misemise.ClothConfig.Config; // あなたの設定クラスの場所に合わせて
+import net.misemise.keybind.KeyBindings;
+import net.misemise.keybind.KeyStateTracker;
+import net.misemise.network.NetworkHandler;
 
 public class OreMinerClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
-        AutoConfig.register(Config.class, GsonConfigSerializer::new);
+        // キーバインドを登録
+        KeyBindings.register();
+
+        // クライアント側のネットワークハンドラを登録
+        NetworkHandler.registerClient();
+
+        // キー状態トラッカーを登録
+        KeyStateTracker.register();
     }
 }

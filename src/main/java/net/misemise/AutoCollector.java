@@ -46,50 +46,29 @@ public class AutoCollector {
                         ItemEntity itemEntity = new ItemEntity(world,
                                 pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, drop);
                         world.spawnEntity(itemEntity);
-                        LOGGER.debug("Inventory full, dropped item at {}", pos);
                     }
                 }
             }
 
-            // 経験値を付与（Block.dropExperienceを利用）
+            // 経験値オーブを生成して即座に回収
             try {
-                // dropExperienceメソッドを使用して経験値オーブを生成
                 state.onStacksDropped(world, pos, tool, true);
-            } catch (Exception e) {
-                LOGGER.debug("Could not drop experience: {}", e.getMessage());
-            }
 
-            // 近くに落ちている既存のアイテムと経験値オーブも回収
-            collectNearbyItems(world, pos, player);
+                // 生成された経験値オーブを回収
+                Box searchBox = new Box(pos).expand(2.0);
+                List<ExperienceOrbEntity> orbs = world.getEntitiesByClass(
+                        ExperienceOrbEntity.class, searchBox, e -> true);
+                for (ExperienceOrbEntity orb : orbs) {
+                    if (!orb.isRemoved()) {
+                        orb.onPlayerCollision(player);
+                    }
+                }
+            } catch (Exception e) {
+                LOGGER.debug("Could not process experience: {}", e.getMessage());
+            }
 
         } catch (Exception e) {
             LOGGER.error("Failed to break and collect block at {}", pos, e);
-        }
-    }
-
-    /**
-     * 近くに落ちているアイテムと経験値オーブを回収
-     */
-    private static void collectNearbyItems(ServerWorld world, BlockPos pos, ServerPlayerEntity player) {
-        Box searchBox = new Box(pos).expand(2.0);
-
-        // アイテムエンティティを回収
-        List<ItemEntity> items = world.getEntitiesByClass(ItemEntity.class, searchBox, e -> true);
-        for (ItemEntity itemEntity : items) {
-            ItemStack stack = itemEntity.getStack();
-            if (player.getInventory().insertStack(stack)) {
-                itemEntity.discard();
-            }
-        }
-
-        // 経験値オーブを回収
-        List<ExperienceOrbEntity> orbs = world.getEntitiesByClass(
-                ExperienceOrbEntity.class, searchBox, e -> true);
-        for (ExperienceOrbEntity orb : orbs) {
-            if (!orb.isRemoved()) {
-                // ExperienceOrbEntityをプレイヤーに触れさせて経験値を付与
-                orb.onPlayerCollision(player);
-            }
         }
     }
 }

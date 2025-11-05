@@ -19,10 +19,10 @@ public class OreBreaker {
     private static final int MAX_BLOCKS = 64;
 
     /**
-     * 最初に壊したブロックの位置から、隣接する同じ鉱石を探して破壊
+     * 指定位置から同じ種類の鉱石を探して一括破壊
      * @param world サーバーワールド
-     * @param startPos 最初に壊したブロックの位置（既に空気ブロックになっている）
-     * @param originalState 最初に壊したブロックの状態
+     * @param startPos 開始位置
+     * @param originalState 開始位置のブロック状態
      * @param player プレイヤー
      * @param heldItem 手に持っているツール
      */
@@ -32,16 +32,8 @@ public class OreBreaker {
         LOGGER.info("Starting vein mining from {}", startPos);
         Set<BlockPos> visited = new HashSet<>();
 
-        // 最初の位置は既に壊れているので、隣接ブロックから開始
-        BlockPos[] neighbors = {
-                startPos.up(), startPos.down(),
-                startPos.north(), startPos.south(),
-                startPos.east(), startPos.west()
-        };
-
-        for (BlockPos neighbor : neighbors) {
-            dfs(world, neighbor, originalState, player, heldItem, visited);
-        }
+        // 最初のブロックから開始
+        dfs(world, startPos, originalState, player, heldItem, visited);
 
         LOGGER.info("Vein mining complete: {} blocks broken", visited.size());
     }

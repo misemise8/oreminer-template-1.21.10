@@ -18,32 +18,31 @@ public class OreMiner implements ModInitializer {
 	public void onInitialize() {
 		LOGGER.info("OreMiner initialized!");
 
-		// AFTERイベント：鉱石の一括破壊
-		PlayerBlockBreakEvents.AFTER.register((world, player, pos, state, entity) -> {
+		// BEFOREイベント：鉱石をつるはしで壊す場合、標準処理をキャンセルしてMod側で処理
+		PlayerBlockBreakEvents.BEFORE.register((world, player, pos, state, entity) -> {
 			// クライアント側では何もしない
-			if (world.isClient()) return;
+			if (world.isClient()) return true;
 
 			// サーバー側のチェック
-			if (!(world instanceof ServerWorld serverWorld)) return;
-			if (!(player instanceof ServerPlayerEntity serverPlayer)) return;
+			if (!(world instanceof ServerWorld serverWorld)) return true;
+			if (!(player instanceof ServerPlayerEntity serverPlayer)) return true;
 
 			ItemStack held = serverPlayer.getMainHandStack();
 
-			// つるはしでない場合はスキップ
-			if (!OreUtils.isPickaxe(held)) {
-				return;
+			// つるはしで鉱石を壊す場合のみ特別処理
+			if (OreUtils.isPickaxe(held) && OreUtils.isOre(state)) {
+				LOGGER.info("Vein mining triggered at {} by player {}",
+						pos, serverPlayer.getName().getString());
+
+				// Mod側で一括破壊を実行
+				OreBreaker.breakConnectedOres(serverWorld, pos, state, serverPlayer, held);
+
+				// 標準のブロック破壊処理をキャンセル
+				return false;
 			}
 
-			// 鉱石でない場合はスキップ
-			if (!OreUtils.isOre(state)) {
-				return;
-			}
-
-			LOGGER.info("Starting vein mining at {} for player {}",
-					pos, serverPlayer.getName().getString());
-
-			// 隣接する鉱石を一括破壊（最初のブロックは既に壊れている）
-			OreBreaker.breakConnectedOres(serverWorld, pos, state, serverPlayer, held);
+			// 通常通り処理
+			return true;
 		});
 	}
 }

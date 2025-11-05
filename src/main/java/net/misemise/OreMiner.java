@@ -7,6 +7,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
+import net.misemise.ClothConfig.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,6 +18,9 @@ public class OreMiner implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		LOGGER.info("OreMiner initialized!");
+
+		// 設定を読み込む
+		Config.load();
 
 		// BEFOREイベント：鉱石をつるはしで壊す場合、標準処理をキャンセルしてMod側で処理
 		PlayerBlockBreakEvents.BEFORE.register((world, player, pos, state, entity) -> {

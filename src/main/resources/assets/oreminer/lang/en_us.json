@@ -1,0 +1,9 @@
+{
+  "config.oreminer.title": "OreMiner Config",
+  "config.oreminer.category.general": "General Settings",
+  "config.oreminer.maxBlocks": "Max Blocks",
+  "config.oreminer.searchDiagonal": "Search Diagonal",
+  "config.oreminer.autoCollect": "Auto Collect",
+  "config.oreminer.autoCollectExp": "Auto Collect Experience",
+  "config.oreminer.debugLog": "Debug Log"
+}

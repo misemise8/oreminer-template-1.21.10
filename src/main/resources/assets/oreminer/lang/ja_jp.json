@@ -1,0 +1,9 @@
+{
+  "config.oreminer.title": "OreMiner 設定",
+  "config.oreminer.category.general": "一般設定",
+  "config.oreminer.maxBlocks": "最大破壊数",
+  "config.oreminer.searchDiagonal": "斜め探索",
+  "config.oreminer.autoCollect": "自動回収",
+  "config.oreminer.autoCollectExp": "経験値自動回収",
+  "config.oreminer.debugLog": "デバッグログ"
+}

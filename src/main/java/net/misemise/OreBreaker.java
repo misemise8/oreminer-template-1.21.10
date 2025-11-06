@@ -20,11 +20,6 @@ public class OreBreaker {
 
     /**
      * 指定位置から同じ種類の鉱石を探して一括破壊
-     * @param world サーバーワールド
-     * @param startPos 開始位置
-     * @param originalState 開始位置のブロック状態
-     * @param player プレイヤー
-     * @param heldItem 手に持っているツール
      */
     public static void breakConnectedOres(ServerWorld world, BlockPos startPos,
                                           BlockState originalState, ServerPlayerEntity player,

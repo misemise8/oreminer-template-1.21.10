@@ -2,12 +2,11 @@ package net.misemise;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
-import net.minecraft.block.BlockState;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
 import net.misemise.ClothConfig.Config;
+import net.misemise.network.NetworkHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +21,9 @@ public class OreMiner implements ModInitializer {
 		// 設定を読み込む
 		Config.load();
 
+		// サーバー側のネットワークハンドラを登録
+		NetworkHandler.registerServer();
+
 		// BEFOREイベント：鉱石をつるはしで壊す場合、標準処理をキャンセルしてMod側で処理
 		PlayerBlockBreakEvents.BEFORE.register((world, player, pos, state, entity) -> {
 			// クライアント側では何もしない
@@ -35,6 +37,15 @@ public class OreMiner implements ModInitializer {
 
 			// つるはしで鉱石を壊す場合のみ特別処理
 			if (OreUtils.isPickaxe(held) && OreUtils.isOre(state)) {
+				// キーが押されているかチェック
+				boolean keyPressed = NetworkHandler.isKeyPressed(serverPlayer.getUuid());
+				LOGGER.info("Ore break attempt: key pressed = {}", keyPressed);
+
+				if (!keyPressed) {
+					// キーが押されていない場合は通常処理
+					return true;
+				}
+
 				LOGGER.info("Vein mining triggered at {} by player {}",
 						pos, serverPlayer.getName().getString());
 

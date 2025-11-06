@@ -76,7 +76,9 @@ public class NetworkHandler {
      * プレイヤーがキーを押しているかチェック
      */
     public static boolean isKeyPressed(UUID playerId) {
-        return playerKeyStates.getOrDefault(playerId, false);
+        boolean pressed = playerKeyStates.getOrDefault(playerId, false);
+        OreMiner.LOGGER.info("Checking key state for player {}: {}", playerId, pressed);
+        return pressed;
     }
 
     /**

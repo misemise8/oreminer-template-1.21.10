@@ -21,8 +21,12 @@ public class OreMiner implements ModInitializer {
 		// 設定を読み込む
 		Config.load();
 
-		// サーバー側のネットワークハンドラを登録
-		NetworkHandler.registerServer();
+		// ※ クライアント側は ClientModInitializer で registerClient() を呼ぶ想定
+		try {
+			NetworkHandler.registerServer();
+		} catch (Throwable t) {
+			LOGGER.warn("NetworkHandler.registerServer() failed or already registered: {}", t.toString());
+		}
 
 		// BEFOREイベント：鉱石をつるはしで壊す場合、標準処理をキャンセルしてMod側で処理
 		PlayerBlockBreakEvents.BEFORE.register((world, player, pos, state, entity) -> {

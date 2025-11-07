@@ -8,11 +8,11 @@ import net.misemise.network.NetworkHandler;
 public class OreMinerClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
+        // クライアント側のネットワーク登録のみ
+        NetworkHandler.registerClient();
+
         // キーバインドを登録
         KeyBindings.register();
-
-        // クライアント側のネットワークハンドラを登録
-        NetworkHandler.registerClient();
 
         // キー状態トラッカーを登録
         KeyStateTracker.register();

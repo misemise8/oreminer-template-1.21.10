@@ -23,6 +23,9 @@ public class NetworkHandler {
     // プレイヤーごとのキー押下状態を保存
     private static final Map<UUID, Boolean> playerKeyStates = new HashMap<>();
 
+    // 登録済みフラグ
+    private static boolean registered = false;
+
     /**
      * キー状態パケット
      */
@@ -43,24 +46,37 @@ public class NetworkHandler {
      * サーバー側のネットワーク登録
      */
     public static void registerServer() {
-        PayloadTypeRegistry.playC2S().register(VeinMinerKeyStatePayload.ID, VeinMinerKeyStatePayload.CODEC);
+        if (registered) {
+            OreMiner.LOGGER.info("Network handler already registered (server side)");
+            return;
+        }
 
-        ServerPlayNetworking.registerGlobalReceiver(VeinMinerKeyStatePayload.ID, (payload, context) -> {
-            context.server().execute(() -> {
-                UUID playerId = context.player().getUuid();
-                playerKeyStates.put(playerId, payload.isPressed());
+        try {
+            PayloadTypeRegistry.playC2S().register(VeinMinerKeyStatePayload.ID, VeinMinerKeyStatePayload.CODEC);
+
+            ServerPlayNetworking.registerGlobalReceiver(VeinMinerKeyStatePayload.ID, (payload, context) -> {
+                context.server().execute(() -> {
+                    UUID playerId = context.player().getUuid();
+                    playerKeyStates.put(playerId, payload.isPressed());
+                    OreMiner.LOGGER.info("Received key state from player {}: {}",
+                            context.player().getName().getString(), payload.isPressed());
+                });
             });
-        });
 
-        OreMiner.LOGGER.info("Server network handler registered");
+            registered = true;
+            OreMiner.LOGGER.info("Server network handler registered");
+        } catch (IllegalArgumentException e) {
+            OreMiner.LOGGER.warn("Packet type already registered, skipping: {}", e.getMessage());
+            registered = true;
+        }
     }
 
     /**
      * クライアント側のネットワーク登録
      */
     public static void registerClient() {
-        PayloadTypeRegistry.playC2S().register(VeinMinerKeyStatePayload.ID, VeinMinerKeyStatePayload.CODEC);
-        OreMiner.LOGGER.info("Client network handler registered");
+        // パケットタイプの登録はサーバー側で行われるので何もしない
+        OreMiner.LOGGER.info("Client network handler initialized");
     }
 
     /**
@@ -69,6 +85,7 @@ public class NetworkHandler {
     public static void sendKeyState(boolean isPressed) {
         if (ClientPlayNetworking.canSend(VeinMinerKeyStatePayload.ID)) {
             ClientPlayNetworking.send(new VeinMinerKeyStatePayload(isPressed));
+            OreMiner.LOGGER.info("Sent key state to server: {}", isPressed);
         }
     }
 

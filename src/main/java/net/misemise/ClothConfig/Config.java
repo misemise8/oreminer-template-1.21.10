@@ -1,10 +1,17 @@
 package net.misemise.ClothConfig;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import net.fabricmc.loader.api.FabricLoader;
 import net.misemise.OreMiner;
+
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 
 /**
  * OreMiner設定クラス
- * 将来的にCloth Configで設定画面を追加予定
  */
 public class Config {
     // 一括破壊の最大ブロック数
@@ -22,19 +29,62 @@ public class Config {
     // デバッグログを出力するか
     public static boolean debugLog = false;
 
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    private static final File CONFIG_FILE = new File(
+            FabricLoader.getInstance().getConfigDir().toFile(),
+            "oreminer.json"
+    );
+
     /**
-     * 設定を読み込む（将来的にファイルから読み込み予定）
+     * 設定を読み込む
      */
     public static void load() {
-        // TODO: Cloth Configで設定ファイルから読み込み
-        OreMiner.LOGGER.info("Config loaded: maxBlocks={}, searchDiagonal={}, autoCollect={}",
-                maxBlocks, searchDiagonal, autoCollect);
+        if (CONFIG_FILE.exists()) {
+            try (FileReader reader = new FileReader(CONFIG_FILE)) {
+                ConfigData data = GSON.fromJson(reader, ConfigData.class);
+                if (data != null) {
+                    maxBlocks = data.maxBlocks;
+                    searchDiagonal = data.searchDiagonal;
+                    autoCollect = data.autoCollect;
+                    autoCollectExp = data.autoCollectExp;
+                    debugLog = data.debugLog;
+                }
+                OreMiner.LOGGER.info("Config loaded from file");
+            } catch (IOException e) {
+                OreMiner.LOGGER.error("Failed to load config", e);
+            }
+        } else {
+            save(); // デフォルト設定で保存
+        }
+
+        OreMiner.LOGGER.info("Config: maxBlocks={}, searchDiagonal={}, autoCollect={}, autoCollectExp={}, debugLog={}",
+                maxBlocks, searchDiagonal, autoCollect, autoCollectExp, debugLog);
     }
 
     /**
-     * 設定を保存する（将来的にファイルに保存予定）
+     * 設定を保存する
      */
     public static void save() {
-        // TODO: Cloth Configで設定ファイルに保存
+        try (FileWriter writer = new FileWriter(CONFIG_FILE)) {
+            ConfigData data = new ConfigData();
+            data.maxBlocks = maxBlocks;
+            data.searchDiagonal = searchDiagonal;
+            data.autoCollect = autoCollect;
+            data.autoCollectExp = autoCollectExp;
+            data.debugLog = debugLog;
+
+            GSON.toJson(data, writer);
+            OreMiner.LOGGER.info("Config saved to file");
+        } catch (IOException e) {
+            OreMiner.LOGGER.error("Failed to save config", e);
+        }
+    }
+
+    private static class ConfigData {
+        int maxBlocks = 64;
+        boolean searchDiagonal = true;
+        boolean autoCollect = true;
+        boolean autoCollectExp = true;
+        boolean debugLog = false;
     }
 }

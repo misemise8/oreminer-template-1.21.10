@@ -69,35 +69,24 @@ public class AutoCollector {
 
             // 経験値の処理
             if (Config.autoCollectExp) {
-                // 経験値オーブを生成
+                // 自動回収：経験値オーブを生成してすぐに回収
                 state.onStacksDropped(world, pos, tool, true);
 
-                // 少し遅延させて経験値オーブを回収
-                world.getServer().execute(() -> {
-                    try {
-                        Box searchBox = new Box(pos).expand(4.0);
-                        List<ExperienceOrbEntity> orbs = world.getEntitiesByClass(
-                                ExperienceOrbEntity.class, searchBox,
-                                orb -> !orb.isRemoved() && orb.age < 10);
+                // 即座に近くの経験値オーブを回収
+                Box searchBox = new Box(pos).expand(3.0);
+                List<ExperienceOrbEntity> orbs = world.getEntitiesByClass(
+                        ExperienceOrbEntity.class, searchBox,
+                        orb -> !orb.isRemoved());
 
-                        int collectedOrbs = 0;
-                        for (ExperienceOrbEntity orb : orbs) {
-                            // プレイヤーとオーブを衝突させて経験値を付与
-                            orb.onPlayerCollision(player);
-                            collectedOrbs++;
-                        }
+                for (ExperienceOrbEntity orb : orbs) {
+                    orb.onPlayerCollision(player);
+                }
 
-                        if (Config.debugLog && collectedOrbs > 0) {
-                            LOGGER.info("Auto-collected {} experience orbs", collectedOrbs);
-                        }
-                    } catch (Exception e) {
-                        if (Config.debugLog) {
-                            LOGGER.error("Failed to collect experience", e);
-                        }
-                    }
-                });
+                if (Config.debugLog && !orbs.isEmpty()) {
+                    LOGGER.info("Auto-collected {} experience orbs", orbs.size());
+                }
             } else {
-                // 通常通り経験値オーブをドロップ
+                // 通常ドロップ：経験値オーブを生成
                 state.onStacksDropped(world, pos, tool, true);
                 if (Config.debugLog) {
                     LOGGER.info("Dropped experience normally");
@@ -108,4 +97,5 @@ public class AutoCollector {
             LOGGER.error("Failed to break and collect block at {}", pos, e);
         }
     }
+
 }

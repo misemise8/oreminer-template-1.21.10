@@ -15,5 +15,5 @@
   "key.oreminer.veinminer": "Vein Miner (Hold)",
   "key.oreminer.openconfig": "Open OreMiner Config",
 
-  "category.oreminer.general": "Ore Miner Controls"
+  "key.category.oreminer.general": "OreMiner"
 }

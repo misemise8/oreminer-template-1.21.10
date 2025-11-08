@@ -2,11 +2,16 @@
   "config.oreminer.title": "OreMiner 設定",
   "config.oreminer.category.general": "一般設定",
   "config.oreminer.maxBlocks": "最大破壊数",
+  "config.oreminer.maxBlocks.tooltip": "一度に破壊できる鉱石ブロックの最大数",
   "config.oreminer.searchDiagonal": "斜め探索",
+  "config.oreminer.searchDiagonal.tooltip": "隣接する6方向だけでなく、斜め方向も含めた26方向を探索します",
   "config.oreminer.autoCollect": "自動回収",
+  "config.oreminer.autoCollect.tooltip": "ドロップしたアイテムを自動的にインベントリに回収します",
   "config.oreminer.autoCollectExp": "経験値自動回収",
+  "config.oreminer.autoCollectExp.tooltip": "経験値オーブを自動的に回収します",
   "config.oreminer.debugLog": "デバッグログ",
+  "config.oreminer.debugLog.tooltip": "トラブルシューティング用のデバッグログを有効にします",
 
   "key.oreminer.veinminer": "一括採掘 (長押し)",
-  "category.oreminer": "OreMiner"
+  "key.oreminer.openconfig": "OreMiner設定を開く"
 }

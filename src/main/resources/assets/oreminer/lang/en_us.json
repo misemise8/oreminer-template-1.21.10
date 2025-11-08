@@ -2,11 +2,18 @@
   "config.oreminer.title": "OreMiner Config",
   "config.oreminer.category.general": "General Settings",
   "config.oreminer.maxBlocks": "Max Blocks",
+  "config.oreminer.maxBlocks.tooltip": "Maximum number of ore blocks to break at once",
   "config.oreminer.searchDiagonal": "Search Diagonal",
+  "config.oreminer.searchDiagonal.tooltip": "Search diagonally (26 directions) instead of just adjacent (6 directions)",
   "config.oreminer.autoCollect": "Auto Collect",
+  "config.oreminer.autoCollect.tooltip": "Automatically collect dropped items to inventory",
   "config.oreminer.autoCollectExp": "Auto Collect Experience",
+  "config.oreminer.autoCollectExp.tooltip": "Automatically collect experience orbs",
   "config.oreminer.debugLog": "Debug Log",
+  "config.oreminer.debugLog.tooltip": "Enable debug logging for troubleshooting",
 
   "key.oreminer.veinminer": "Vein Miner (Hold)",
-  "category.oreminer": "OreMiner"
+  "key.oreminer.openconfig": "Open OreMiner Config",
+
+  "category.oreminer.general": "Ore Miner Controls"
 }

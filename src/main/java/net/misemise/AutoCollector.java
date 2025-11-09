@@ -72,6 +72,14 @@ public class AutoCollector {
                 if (Config.autoCollectExp) {
                     // 自動回収：プレイヤーに直接経験値を付与
                     player.addExperience(expAmount);
+
+                    // 経験値取得音を再生
+                    world.playSound(null, player.getBlockPos(),
+                            net.minecraft.sound.SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP,
+                            net.minecraft.sound.SoundCategory.PLAYERS,
+                            0.1f, // 音量（0.1 = 小さめ）
+                            (float)(0.5 + Math.random() * 0.5)); // ピッチ（0.5-1.0でランダム）
+
                     if (Config.debugLog) {
                         LOGGER.info("Auto-collected {} experience", expAmount);
                     }

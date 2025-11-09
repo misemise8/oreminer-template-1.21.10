@@ -19,7 +19,7 @@
 			"net.misemise.OreMiner"
 		],
 		"client": [
-			"net.misemise.OreMinerClient"
+			"net.misemise.client.OreMinerClient"
 		],
 		"fabric-datagen": [
 			"net.misemise.OreMinerDataGenerator"

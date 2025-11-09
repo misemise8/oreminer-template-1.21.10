@@ -1,4 +1,4 @@
-package net.misemise;
+package net.misemise.client;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.misemise.keybind.KeyBindings;

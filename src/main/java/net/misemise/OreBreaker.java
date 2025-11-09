@@ -6,6 +6,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.misemise.ClothConfig.Config;
+import net.misemise.network.NetworkHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,9 +33,13 @@ public class OreBreaker {
         // 最初のブロックから開始
         dfs(world, startPos, originalState, player, heldItem, visited);
 
+        int blocksCount = visited.size();
         if (Config.debugLog) {
-            LOGGER.info("Vein mining complete: {} blocks broken", visited.size());
+            LOGGER.info("Vein mining complete: {} blocks broken", blocksCount);
         }
+
+        // クライアントに破壊したブロック数を送信
+        NetworkHandler.sendBlocksMinedCount(player, blocksCount);
     }
 
     private static void dfs(ServerWorld world, BlockPos pos, BlockState targetState,

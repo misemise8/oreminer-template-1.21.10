@@ -10,8 +10,6 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.util.shape.VoxelShapes;
 import net.misemise.OreMiner;
 
 import java.util.HashSet;
@@ -82,18 +80,12 @@ public class BlockHighlightRenderer {
             for (BlockPos pos : blocksCopy) {
                 Box box = new Box(pos).expand(0.002);
 
-                // Box -> VoxelShape に変換（shapes() は存在しないのでこっちを使う）
-                VoxelShape shape = VoxelShapes.cuboid(
-                        box.minX, box.minY, box.minZ,
-                        box.maxX, box.maxY, box.maxZ
-                );
-
-                // WorldRendererのdrawShapeOutlineを使用
+                // WorldRendererのdrawShapeOutlineメソッドを使用
                 WorldRenderer.drawShapeOutline(
                         matrices,
                         vertexConsumer,
-                        shape,
-                        0.0, 0.0, 0.0, // 既に行列でカメラ分を引いているので 0,0,0 で OK
+                        box.shapes().toList().get(0),
+                        0, 0, 0,
                         RED, GREEN, BLUE, ALPHA
                 );
             }

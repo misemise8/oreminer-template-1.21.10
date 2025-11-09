@@ -20,8 +20,12 @@ public class OreMinerClient implements ClientModInitializer {
         // キー状態トラッカーを登録
         KeyStateTracker.register();
 
-        // HUDを登録 ★★★ この行を追加 ★★★
+        // HUDを登録
         VeinMiningHud.register();
         OreMiner.LOGGER.info("VeinMiningHud registered");
+
+        // ブロックハイライトレンダラーを登録
+        BlockHighlightRenderer.register();
+        OreMiner.LOGGER.info("BlockHighlightRenderer registered");
     }
 }

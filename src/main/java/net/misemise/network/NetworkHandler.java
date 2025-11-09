@@ -7,6 +7,7 @@ import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.codec.PacketCodecs;
 import net.minecraft.network.packet.CustomPayload;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import net.misemise.OreMiner;
 
@@ -54,6 +55,9 @@ public class NetworkHandler {
         try {
             PayloadTypeRegistry.playC2S().register(VeinMinerKeyStatePayload.ID, VeinMinerKeyStatePayload.CODEC);
 
+            // ブロック破壊数パケット登録（サーバーからクライアントへ）
+            PayloadTypeRegistry.playS2C().register(BlocksMinedCountPayload.ID, BlocksMinedCountPayload.CODEC);
+
             ServerPlayNetworking.registerGlobalReceiver(VeinMinerKeyStatePayload.ID, (payload, context) -> {
                 context.server().execute(() -> {
                     UUID playerId = context.player().getUuid();
@@ -69,6 +73,8 @@ public class NetworkHandler {
             OreMiner.LOGGER.warn("Packet type already registered, skipping: {}", e.getMessage());
             registered = true;
         }
+
+
     }
 
     /**
@@ -77,6 +83,13 @@ public class NetworkHandler {
     public static void registerClient() {
         // パケットタイプの登録はサーバー側で行われるので何もしない
         OreMiner.LOGGER.info("Client network handler initialized");
+
+        ClientPlayNetworking.registerGlobalReceiver(BlocksMinedCountPayload.ID, (payload, context) -> {
+            context.client().execute(() -> {
+                // VeinMiningHudに破壊数を設定
+                net.misemise.client.VeinMiningHud.setBlocksMinedCount(payload.count());
+            });
+        });
     }
 
     /**
@@ -103,5 +116,26 @@ public class NetworkHandler {
      */
     public static void clearPlayerState(UUID playerId) {
         playerKeyStates.remove(playerId);
+    }
+
+    public record BlocksMinedCountPayload(int count) implements CustomPayload {
+        public static final CustomPayload.Id<BlocksMinedCountPayload> ID =
+                new CustomPayload.Id<>(Identifier.of(OreMiner.MOD_ID, "blocks_mined_count"));
+
+        public static final PacketCodec<RegistryByteBuf, BlocksMinedCountPayload> CODEC =
+                PacketCodecs.INTEGER.xmap(BlocksMinedCountPayload::new, BlocksMinedCountPayload::count).cast();
+
+        @Override
+        public Id<? extends CustomPayload> getId() {
+            return ID;
+        }
+    }
+
+    /**
+     * 破壊したブロック数をクライアントに送信
+     */
+    public static void sendBlocksMinedCount(ServerPlayerEntity player, int count) {
+        ServerPlayNetworking.send(player, new BlocksMinedCountPayload(count));
+        OreMiner.LOGGER.info("Sent blocks mined count to client: {}", count);
     }
 }

@@ -7,7 +7,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
 import net.misemise.ClothConfig.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,28 +67,20 @@ public class AutoCollector {
             }
 
             // 経験値の処理
-            if (Config.autoCollectExp) {
-                // 自動回収：経験値オーブを生成してすぐに回収
-                state.onStacksDropped(world, pos, tool, true);
-
-                // 即座に近くの経験値オーブを回収
-                Box searchBox = new Box(pos).expand(3.0);
-                List<ExperienceOrbEntity> orbs = world.getEntitiesByClass(
-                        ExperienceOrbEntity.class, searchBox,
-                        orb -> !orb.isRemoved());
-
-                for (ExperienceOrbEntity orb : orbs) {
-                    orb.onPlayerCollision(player);
-                }
-
-                if (Config.debugLog && !orbs.isEmpty()) {
-                    LOGGER.info("Auto-collected {} experience orbs", orbs.size());
-                }
-            } else {
-                // 通常ドロップ：経験値オーブを生成
-                state.onStacksDropped(world, pos, tool, true);
-                if (Config.debugLog) {
-                    LOGGER.info("Dropped experience normally");
+            int expAmount = getExperienceFromOre(state);
+            if (expAmount > 0) {
+                if (Config.autoCollectExp) {
+                    // 自動回収：プレイヤーに直接経験値を付与
+                    player.addExperience(expAmount);
+                    if (Config.debugLog) {
+                        LOGGER.info("Auto-collected {} experience", expAmount);
+                    }
+                } else {
+                    // 通常ドロップ：経験値オーブを生成
+                    ExperienceOrbEntity.spawn(world, player.getBlockPos().toCenterPos(), expAmount);
+                    if (Config.debugLog) {
+                        LOGGER.info("Dropped {} experience as orb", expAmount);
+                    }
                 }
             }
 
@@ -98,4 +89,41 @@ public class AutoCollector {
         }
     }
 
+    /**
+     * 鉱石ブロックから得られる経験値量を取得
+     */
+    private static int getExperienceFromOre(BlockState state) {
+        String blockName = state.getBlock().toString().toLowerCase();
+
+        // ダイヤモンド鉱石: 3-7
+        if (blockName.contains("diamond_ore")) {
+            return 3 + (int)(Math.random() * 5);
+        }
+        // エメラルド鉱石: 3-7
+        if (blockName.contains("emerald_ore")) {
+            return 3 + (int)(Math.random() * 5);
+        }
+        // ラピスラズリ鉱石: 2-5
+        if (blockName.contains("lapis_ore")) {
+            return 2 + (int)(Math.random() * 4);
+        }
+        // レッドストーン鉱石: 1-5
+        if (blockName.contains("redstone_ore")) {
+            return 1 + (int)(Math.random() * 5);
+        }
+        // 石炭鉱石: 0-2
+        if (blockName.contains("coal_ore")) {
+            return (int)(Math.random() * 3);
+        }
+        // ネザークォーツ鉱石: 2-5
+        if (blockName.contains("quartz_ore")) {
+            return 2 + (int)(Math.random() * 4);
+        }
+        // ネザー金鉱石: 0-1
+        if (blockName.contains("nether_gold_ore")) {
+            return (int)(Math.random() * 2);
+        }
+
+        return 0;
+    }
 }

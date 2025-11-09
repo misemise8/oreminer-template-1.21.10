@@ -66,31 +66,37 @@ public class AutoCollector {
                 }
             }
 
-            // 経験値の処理
-            int expAmount = getExperienceFromOre(state);
-            if (expAmount > 0) {
-                if (Config.autoCollectExp) {
-                    // 自動回収：プレイヤーに直接経験値を付与
-                    player.addExperience(expAmount);
+            // ★★★ ここから修正: シルクタッチの場合は経験値を出さない ★★★
+            // 経験値の処理（シルクタッチの場合は経験値を出さない）
+            if (!hasSilkTouch(tool)) {
+                int expAmount = getExperienceFromOre(state);
+                if (expAmount > 0) {
+                    if (Config.autoCollectExp) {
+                        // 自動回収：プレイヤーに直接経験値を付与
+                        player.addExperience(expAmount);
 
-                    // 経験値取得音を再生
-                    world.playSound(null, player.getBlockPos(),
-                            net.minecraft.sound.SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP,
-                            net.minecraft.sound.SoundCategory.PLAYERS,
-                            0.1f, // 音量（0.1 = 小さめ）
-                            (float)(0.5 + Math.random() * 0.5)); // ピッチ（0.5-1.0でランダム）
+                        // 経験値取得音を再生
+                        world.playSound(null, player.getBlockPos(),
+                                net.minecraft.sound.SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP,
+                                net.minecraft.sound.SoundCategory.PLAYERS,
+                                0.1f, // 音量（0.1 = 小さめ）
+                                (float)(0.5 + Math.random() * 0.5)); // ピッチ（0.5-1.0でランダム）
 
-                    if (Config.debugLog) {
-                        LOGGER.info("Auto-collected {} experience", expAmount);
-                    }
-                } else {
-                    // 通常ドロップ：経験値オーブを生成
-                    ExperienceOrbEntity.spawn(world, player.getBlockPos().toCenterPos(), expAmount);
-                    if (Config.debugLog) {
-                        LOGGER.info("Dropped {} experience as orb", expAmount);
+                        if (Config.debugLog) {
+                            LOGGER.info("Auto-collected {} experience", expAmount);
+                        }
+                    } else {
+                        // 通常ドロップ：経験値オーブを生成
+                        ExperienceOrbEntity.spawn(world, player.getBlockPos().toCenterPos(), expAmount);
+                        if (Config.debugLog) {
+                            LOGGER.info("Dropped {} experience as orb", expAmount);
+                        }
                     }
                 }
+            } else if (Config.debugLog) {
+                LOGGER.info("Silk Touch detected - no experience dropped");
             }
+            // ★★★ ここまで修正 ★★★
 
         } catch (Exception e) {
             LOGGER.error("Failed to break and collect block at {}", pos, e);
@@ -134,4 +140,28 @@ public class AutoCollector {
 
         return 0;
     }
+
+    // ★★★ 新規追加: シルクタッチ判定メソッド ★★★
+    /**
+     * ツールにシルクタッチエンチャントがついているか確認
+     */
+    private static boolean hasSilkTouch(ItemStack tool) {
+        if (tool == null || tool.isEmpty()) {
+            return false;
+        }
+
+        try {
+            return tool.hasEnchantments() &&
+                    tool.getEnchantments().getEnchantments().stream()
+                            .anyMatch(entry -> {
+                                String desc = entry.value().description().getString().toLowerCase();
+                                String id = entry.getIdAsString();
+                                return desc.contains("silk touch") || id.contains("silk_touch");
+                            });
+        } catch (Throwable e) {
+            LOGGER.warn("Failed to check for Silk Touch enchantment", e);
+            return false;
+        }
+    }
+    // ★★★ ここまで追加 ★★★
 }

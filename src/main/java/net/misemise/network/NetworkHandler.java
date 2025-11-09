@@ -80,16 +80,23 @@ public class NetworkHandler {
     /**
      * クライアント側のネットワーク登録
      */
+    /**
+     * クライアント側のネットワーク登録
+     */
     public static void registerClient() {
-        // パケットタイプの登録はサーバー側で行われるので何もしない
-        OreMiner.LOGGER.info("Client network handler initialized");
+        OreMiner.LOGGER.info("Client network handler initializing...");
 
+        // ブロック破壊数パケットの受信処理を登録
         ClientPlayNetworking.registerGlobalReceiver(BlocksMinedCountPayload.ID, (payload, context) -> {
             context.client().execute(() -> {
+                OreMiner.LOGGER.info("Received blocks mined count: {}", payload.count());
                 // VeinMiningHudに破壊数を設定
                 net.misemise.client.VeinMiningHud.setBlocksMinedCount(payload.count());
+                OreMiner.LOGGER.info("Set HUD blocks mined count to: {}", payload.count());
             });
         });
+
+        OreMiner.LOGGER.info("Client network handler registered");
     }
 
     /**

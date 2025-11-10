@@ -1,8 +1,13 @@
 package net.misemise.mixin;
 
+import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import net.minecraft.client.render.*;
-import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.util.ObjectAllocator;
+import net.misemise.OreMiner;
 import net.misemise.client.BlockHighlightRenderer;
+import org.joml.Matrix4f;
+import org.joml.Vector4f;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -13,16 +18,34 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class WorldRendererMixin {
 
     @Shadow
-    private VertexConsumerProvider.Immediate vertexConsumerProvider;
+    @Final
+    private BufferBuilderStorage bufferBuilders;
 
-    @Inject(method = "render", at = @At("TAIL"))
-    private void onRenderEnd(RenderTickCounter tickCounter, boolean renderBlockOutline,
-                             Camera camera, GameRenderer gameRenderer,
-                             LightmapTextureManager lightmapTextureManager,
-                             MatrixStack matrices, MatrixStack matrices2, CallbackInfo ci) {
-        // レンダリングの最後にハイライトを描画
-        if (vertexConsumerProvider != null) {
-            BlockHighlightRenderer.render(camera, vertexConsumerProvider);
+    @Inject(
+            method = "render",
+            at = @At("TAIL")
+    )
+    private void onRenderEnd(
+            ObjectAllocator allocator,
+            RenderTickCounter tickCounter,
+            boolean renderBlockOutline,
+            Camera camera,
+            Matrix4f positionMatrix,
+            Matrix4f matrix4f,
+            Matrix4f projectionMatrix,
+            GpuBufferSlice fogBuffer,
+            Vector4f fogColor,
+            boolean renderSky,
+            CallbackInfo ci
+    ) {
+        try {
+            // VertexConsumerProviderを取得
+            VertexConsumerProvider.Immediate immediate = this.bufferBuilders.getEntityVertexConsumers();
+
+            // ハイライトを描画
+            BlockHighlightRenderer.render(camera, immediate);
+        } catch (Exception e) {
+            OreMiner.LOGGER.error("Failed to render block highlights", e);
         }
     }
 }

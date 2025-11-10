@@ -64,22 +64,24 @@ public class BlockHighlightRenderer {
         try {
             Vec3d cameraPos = camera.getPos();
 
+            // 全ブロックに対して共通のMatrixStackを使用
+            MatrixStack matrices = new MatrixStack();
+            matrices.push();
+
+            // カメラ位置を原点として座標系を変換
+            matrices.translate(-cameraPos.x, -cameraPos.y, -cameraPos.z);
+
+            Matrix4f matrix = matrices.peek().getPositionMatrix();
+
             // RenderLayer.getLinesを使用
             VertexConsumer vertexConsumer = vertexConsumers.getBuffer(RenderLayer.getLines());
 
+            // 各ブロックのアウトラインを描画
             for (BlockPos pos : blocksCopy) {
-                MatrixStack matrices = new MatrixStack();
-
-                // カメラからの相対位置を計算
-                matrices.translate(
-                        pos.getX() - cameraPos.x,
-                        pos.getY() - cameraPos.y,
-                        pos.getZ() - cameraPos.z
-                );
-
-                Matrix4f matrix = matrices.peek().getPositionMatrix();
-                drawBoxOutline(vertexConsumer, matrix);
+                drawBoxOutline(vertexConsumer, matrix, pos);
             }
+
+            matrices.pop();
 
             // バッファを描画
             vertexConsumers.draw(RenderLayer.getLines());
@@ -90,15 +92,16 @@ public class BlockHighlightRenderer {
     }
 
     /**
-     * ボックスのアウトラインを直接描画
+     * ボックスのアウトラインを直接描画（ワールド座標を使用）
      */
-    private static void drawBoxOutline(VertexConsumer vertexConsumer, Matrix4f matrix) {
-        float x1 = -0.002f;
-        float y1 = -0.002f;
-        float z1 = -0.002f;
-        float x2 = 1.002f;
-        float y2 = 1.002f;
-        float z2 = 1.002f;
+    private static void drawBoxOutline(VertexConsumer vertexConsumer, Matrix4f matrix, BlockPos pos) {
+        // ワールド座標でのブロックの境界
+        float x1 = pos.getX() - 0.002f;
+        float y1 = pos.getY() - 0.002f;
+        float z1 = pos.getZ() - 0.002f;
+        float x2 = pos.getX() + 1.002f;
+        float y2 = pos.getY() + 1.002f;
+        float z2 = pos.getZ() + 1.002f;
 
         // 底面の4辺
         drawLine(vertexConsumer, matrix, x1, y1, z1, x2, y1, z1);
@@ -130,9 +133,9 @@ public class BlockHighlightRenderer {
         float dz = z2 - z1;
         float length = (float) Math.sqrt(dx * dx + dy * dy + dz * dz);
 
-        float nx = dx / length;
-        float ny = dy / length;
-        float nz = dz / length;
+        float nx = length > 0 ? dx / length : 0;
+        float ny = length > 0 ? dy / length : 0;
+        float nz = length > 0 ? dz / length : 0;
 
         // 始点
         vertexConsumer.vertex(matrix, x1, y1, z1)

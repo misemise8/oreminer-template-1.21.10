@@ -1,20 +1,16 @@
 package net.misemise.client;
 
-import org.joml.Matrix4f;
+import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
 import net.misemise.OreMiner;
+import org.joml.Matrix4f;
 
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- * BlockHighlightRenderer - ブロックにぴったり合うアウトラインを描く版
- * 注意: Mixin 側から immediate と poseMatrix を渡す実装を想定しています
- */
 public class BlockHighlightRenderer {
     private static final Set<BlockPos> highlightedBlocks = new HashSet<>();
 
@@ -31,22 +27,31 @@ public class BlockHighlightRenderer {
     public static void setHighlightedBlocks(Set<BlockPos> blocks) {
         synchronized (highlightedBlocks) {
             highlightedBlocks.clear();
-            if (blocks != null) highlightedBlocks.addAll(blocks);
+            if (blocks != null) {
+                highlightedBlocks.addAll(blocks);
+                if (!blocks.isEmpty()) {
+                    OreMiner.LOGGER.info("Set {} blocks to highlight", blocks.size());
+                }
+            }
         }
     }
 
     public static void clearHighlights() {
         synchronized (highlightedBlocks) {
-            highlightedBlocks.clear();
+            if (!highlightedBlocks.isEmpty()) {
+                highlightedBlocks.clear();
+                OreMiner.LOGGER.info("Cleared highlights");
+            }
         }
     }
 
     /**
-     * Mixin から呼ばれるレンダリング関数
+     * Mixinから呼ばれるレンダリング関数
      * @param immediate VertexConsumerProvider.Immediate
-     * @param poseMatrix WorldRenderer の positionMatrix（ワールド→ビュー→クリップ行列）
+     * @param camera カメラ（カメラ位置を取得するため）
+     * @param positionMatrix WorldRendererのpositionMatrix
      */
-    public static void render(VertexConsumerProvider.Immediate immediate, Matrix4f poseMatrix) {
+    public static void render(VertexConsumerProvider.Immediate immediate, Camera camera, Matrix4f positionMatrix) {
         Set<BlockPos> blocksCopy;
         synchronized (highlightedBlocks) {
             if (highlightedBlocks.isEmpty()) return;
@@ -61,45 +66,71 @@ public class BlockHighlightRenderer {
             int bi = (int) (BLUE * 255.0f);
             int ai = (int) (ALPHA * 255.0f);
 
-            // 微小な外側オフセット（必要なければ 0f にする）
-            final float OUTSET = 0.0001f; // ← これを 0 にすれば "正確にブロック境界" に合わせられる
+            // カメラ位置を取得
+            float camX = (float) camera.getPos().x;
+            float camY = (float) camera.getPos().y;
+            float camZ = (float) camera.getPos().z;
+
+            // 調整行列を作成（positionMatrixをコピーしてカメラ位置分だけtranslate）
+            Matrix4f viewMatrix = new Matrix4f(positionMatrix);
+            viewMatrix.translate(-camX, -camY, -camZ);
 
             for (BlockPos pos : blocksCopy) {
-                // 明示的に pos -> pos+1 の範囲で作る（expand は使わない）
-                float x0 = pos.getX() - OUTSET;
-                float y0 = pos.getY() - OUTSET;
-                float z0 = pos.getZ() - OUTSET;
-                float x1 = pos.getX() + 1.0f + OUTSET;
-                float y1 = pos.getY() + 1.0f + OUTSET;
-                float z1 = pos.getZ() + 1.0f + OUTSET;
+                // ブロックの正確な境界（オフセットなし）
+                float x0 = pos.getX();
+                float y0 = pos.getY();
+                float z0 = pos.getZ();
+                float x1 = pos.getX() + 1.0f;
+                float y1 = pos.getY() + 1.0f;
+                float z1 = pos.getZ() + 1.0f;
 
-                // 12 本のエッジを描く（各辺を2頂点で送る）
-                drawEdge(vertexConsumer, poseMatrix, x0, y0, z0, x1, y0, z0, ri, gi, bi, ai); // bottom edge 1
-                drawEdge(vertexConsumer, poseMatrix, x1, y0, z0, x1, y0, z1, ri, gi, bi, ai);
-                drawEdge(vertexConsumer, poseMatrix, x1, y0, z1, x0, y0, z1, ri, gi, bi, ai);
-                drawEdge(vertexConsumer, poseMatrix, x0, y0, z1, x0, y0, z0, ri, gi, bi, ai);
+                // 12本のエッジを描画
+                // 底面
+                drawEdge(vertexConsumer, viewMatrix, x0, y0, z0, x1, y0, z0, ri, gi, bi, ai);
+                drawEdge(vertexConsumer, viewMatrix, x1, y0, z0, x1, y0, z1, ri, gi, bi, ai);
+                drawEdge(vertexConsumer, viewMatrix, x1, y0, z1, x0, y0, z1, ri, gi, bi, ai);
+                drawEdge(vertexConsumer, viewMatrix, x0, y0, z1, x0, y0, z0, ri, gi, bi, ai);
 
-                drawEdge(vertexConsumer, poseMatrix, x0, y1, z0, x1, y1, z0, ri, gi, bi, ai); // top
-                drawEdge(vertexConsumer, poseMatrix, x1, y1, z0, x1, y1, z1, ri, gi, bi, ai);
-                drawEdge(vertexConsumer, poseMatrix, x1, y1, z1, x0, y1, z1, ri, gi, bi, ai);
-                drawEdge(vertexConsumer, poseMatrix, x0, y1, z1, x0, y1, z0, ri, gi, bi, ai);
+                // 上面
+                drawEdge(vertexConsumer, viewMatrix, x0, y1, z0, x1, y1, z0, ri, gi, bi, ai);
+                drawEdge(vertexConsumer, viewMatrix, x1, y1, z0, x1, y1, z1, ri, gi, bi, ai);
+                drawEdge(vertexConsumer, viewMatrix, x1, y1, z1, x0, y1, z1, ri, gi, bi, ai);
+                drawEdge(vertexConsumer, viewMatrix, x0, y1, z1, x0, y1, z0, ri, gi, bi, ai);
 
-                drawEdge(vertexConsumer, poseMatrix, x0, y0, z0, x0, y1, z0, ri, gi, bi, ai); // vertical
-                drawEdge(vertexConsumer, poseMatrix, x1, y0, z0, x1, y1, z0, ri, gi, bi, ai);
-                drawEdge(vertexConsumer, poseMatrix, x1, y0, z1, x1, y1, z1, ri, gi, bi, ai);
-                drawEdge(vertexConsumer, poseMatrix, x0, y0, z1, x0, y1, z1, ri, gi, bi, ai);
+                // 縦
+                drawEdge(vertexConsumer, viewMatrix, x0, y0, z0, x0, y1, z0, ri, gi, bi, ai);
+                drawEdge(vertexConsumer, viewMatrix, x1, y0, z0, x1, y1, z0, ri, gi, bi, ai);
+                drawEdge(vertexConsumer, viewMatrix, x1, y0, z1, x1, y1, z1, ri, gi, bi, ai);
+                drawEdge(vertexConsumer, viewMatrix, x0, y0, z1, x0, y1, z1, ri, gi, bi, ai);
             }
+
+            // バッファを描画
+            immediate.draw(RenderLayer.getLines());
+
         } catch (Throwable t) {
             OreMiner.LOGGER.error("Error rendering highlights", t);
         }
     }
 
-    // helper: 1本の辺を2頂点で送る
+    /**
+     * 1本の辺を2頂点で描画
+     */
     private static void drawEdge(VertexConsumer vc, Matrix4f mat,
-                                 float ax, float ay, float az, float bx, float by, float bz,
+                                 float ax, float ay, float az,
+                                 float bx, float by, float bz,
                                  int ri, int gi, int bi, int ai) {
-        // 法線は線なので適当に 0 を渡しても OK
-        vc.vertex(mat, ax, ay, az).color(ri, gi, bi, ai).texture(0f, 0f).overlay(0).light(0xF000F0).normal(0f, 1f, 0f);
-        vc.vertex(mat, bx, by, bz).color(ri, gi, bi, ai).texture(0f, 0f).overlay(0).light(0xF000F0).normal(0f, 1f, 0f);
+        vc.vertex(mat, ax, ay, az)
+                .color(ri, gi, bi, ai)
+                .texture(0f, 0f)
+                .overlay(0)
+                .light(0xF000F0)
+                .normal(0f, 1f, 0f);
+
+        vc.vertex(mat, bx, by, bz)
+                .color(ri, gi, bi, ai)
+                .texture(0f, 0f)
+                .overlay(0)
+                .light(0xF000F0)
+                .normal(0f, 1f, 0f);
     }
 }

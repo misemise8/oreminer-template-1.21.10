@@ -41,13 +41,9 @@ public abstract class WorldRendererMixin {
         try {
             VertexConsumerProvider.Immediate immediate = this.bufferBuilders.getEntityVertexConsumers();
 
-            // ここで positionMatrix をコピーしてカメラ分だけ translate(-cam) する
-            Matrix4f adjusted = new Matrix4f(positionMatrix);
-            // camera.getPos() は Vec3d
-            adjusted.translate((float)-camera.getPos().x, (float)-camera.getPos().y, (float)-camera.getPos().z);
+            // positionMatrixとcameraを渡す
+            BlockHighlightRenderer.render(immediate, camera, positionMatrix);
 
-            // 調整行列を渡す（BlockHighlightRenderer 側は行列をそのまま使う実装）
-            BlockHighlightRenderer.render(immediate, adjusted);
         } catch (Exception e) {
             OreMiner.LOGGER.error("Failed to render block highlights", e);
         }

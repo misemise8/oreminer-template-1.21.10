@@ -13,7 +13,6 @@ import java.util.*;
 
 public class BlockHighlightRenderer {
     private static final Set<BlockPos> highlightedBlocks = new HashSet<>();
-
     private static final float RED = 0.0f;
     private static final float GREEN = 0.8f;
     private static final float BLUE = 1.0f;
@@ -28,19 +27,13 @@ public class BlockHighlightRenderer {
             highlightedBlocks.clear();
             if (blocks != null) {
                 highlightedBlocks.addAll(blocks);
-                if (!blocks.isEmpty()) {
-                    OreMiner.LOGGER.info("Set {} blocks to highlight", blocks.size());
-                }
             }
         }
     }
 
     public static void clearHighlights() {
         synchronized (highlightedBlocks) {
-            if (!highlightedBlocks.isEmpty()) {
-                highlightedBlocks.clear();
-                OreMiner.LOGGER.info("Cleared highlights");
-            }
+            highlightedBlocks.clear();
         }
     }
 
@@ -55,157 +48,108 @@ public class BlockHighlightRenderer {
             GL11.glDisable(GL11.GL_DEPTH_TEST);
             GL11.glDepthMask(false);
 
-            VertexConsumer vertexConsumer = immediate.getBuffer(RenderLayer.getLines());
+            VertexConsumer vc = immediate.getBuffer(RenderLayer.getLines());
+            int ri = (int)(RED * 255), gi = (int)(GREEN * 255), bi = (int)(BLUE * 255), ai = (int)(ALPHA * 255);
 
-            int ri = (int) (RED * 255.0f);
-            int gi = (int) (GREEN * 255.0f);
-            int bi = (int) (BLUE * 255.0f);
-            int ai = (int) (ALPHA * 255.0f);
+            Matrix4f mat = new Matrix4f(positionMatrix);
+            mat.translate(-(float)camera.getPos().x, -(float)camera.getPos().y, -(float)camera.getPos().z);
 
-            float camX = (float) camera.getPos().x;
-            float camY = (float) camera.getPos().y;
-            float camZ = (float) camera.getPos().z;
-
-            Matrix4f viewMatrix = new Matrix4f(positionMatrix);
-            viewMatrix.translate(-camX, -camY, -camZ);
-
-            // エッジを収集（重複を排除）
             Set<Edge> edges = new HashSet<>();
 
-            for (BlockPos pos : blocksCopy) {
-                float x0 = pos.getX();
-                float y0 = pos.getY();
-                float z0 = pos.getZ();
-                float x1 = pos.getX() + 1.0f;
-                float y1 = pos.getY() + 1.0f;
-                float z1 = pos.getZ() + 1.0f;
+            for (BlockPos p : blocksCopy) {
+                float x0 = p.getX(), y0 = p.getY(), z0 = p.getZ();
+                float x1 = x0 + 1, y1 = y0 + 1, z1 = z0 + 1;
 
-                // 各エッジについて、外周エッジかチェック
-                // 12本のエッジ（ブロックの各辺）
+                // 6方向チェック
+                boolean down = blocksCopy.contains(p.down());
+                boolean up = blocksCopy.contains(p.up());
+                boolean north = blocksCopy.contains(p.north());
+                boolean south = blocksCopy.contains(p.south());
+                boolean west = blocksCopy.contains(p.west());
+                boolean east = blocksCopy.contains(p.east());
 
-                // 底面の4本のエッジ
-                checkAndAddEdge(edges, blocksCopy, pos, x0, y0, z0, x1, y0, z0, 0, -1, 0);
-                checkAndAddEdge(edges, blocksCopy, pos, x1, y0, z0, x1, y0, z1, 1, -1, 0);
-                checkAndAddEdge(edges, blocksCopy, pos, x1, y0, z1, x0, y0, z1, 0, -1, 1);
-                checkAndAddEdge(edges, blocksCopy, pos, x0, y0, z1, x0, y0, z0, -1, -1, 0);
-
-                // 上面の4本のエッジ
-                checkAndAddEdge(edges, blocksCopy, pos, x0, y1, z0, x1, y1, z0, 0, 1, 0);
-                checkAndAddEdge(edges, blocksCopy, pos, x1, y1, z0, x1, y1, z1, 1, 1, 0);
-                checkAndAddEdge(edges, blocksCopy, pos, x1, y1, z1, x0, y1, z1, 0, 1, 1);
-                checkAndAddEdge(edges, blocksCopy, pos, x0, y1, z1, x0, y1, z0, -1, 1, 0);
-
-                // 縦の4本のエッジ
-                checkAndAddEdge(edges, blocksCopy, pos, x0, y0, z0, x0, y1, z0, -1, 0, 0);
-                checkAndAddEdge(edges, blocksCopy, pos, x1, y0, z0, x1, y1, z0, 1, 0, 0);
-                checkAndAddEdge(edges, blocksCopy, pos, x1, y0, z1, x1, y1, z1, 1, 0, 1);
-                checkAndAddEdge(edges, blocksCopy, pos, x0, y0, z1, x0, y1, z1, -1, 0, 1);
+                // 底面
+                if (!down) {
+                    if (!west && !north) edges.add(new Edge(x0,y0,z0, x1,y0,z0));
+                    if (!east && !north) edges.add(new Edge(x1,y0,z0, x1,y0,z1));
+                    if (!east && !south) edges.add(new Edge(x1,y0,z1, x0,y0,z1));
+                    if (!west && !south) edges.add(new Edge(x0,y0,z1, x0,y0,z0));
+                }
+                // 上面
+                if (!up) {
+                    if (!west && !north) edges.add(new Edge(x0,y1,z0, x1,y1,z0));
+                    if (!east && !north) edges.add(new Edge(x1,y1,z0, x1,y1,z1));
+                    if (!east && !south) edges.add(new Edge(x1,y1,z1, x0,y1,z1));
+                    if (!west && !south) edges.add(new Edge(x0,y1,z1, x0,y1,z0));
+                }
+                // 北面
+                if (!north) {
+                    if (!west && !down) edges.add(new Edge(x0,y0,z0, x1,y0,z0));
+                    if (!east && !down) edges.add(new Edge(x1,y0,z0, x1,y1,z0));
+                    if (!east && !up) edges.add(new Edge(x1,y1,z0, x0,y1,z0));
+                    if (!west && !up) edges.add(new Edge(x0,y1,z0, x0,y0,z0));
+                }
+                // 南面
+                if (!south) {
+                    if (!west && !down) edges.add(new Edge(x0,y0,z1, x1,y0,z1));
+                    if (!east && !down) edges.add(new Edge(x1,y0,z1, x1,y1,z1));
+                    if (!east && !up) edges.add(new Edge(x1,y1,z1, x0,y1,z1));
+                    if (!west && !up) edges.add(new Edge(x0,y1,z1, x0,y0,z1));
+                }
+                // 西面
+                if (!west) {
+                    if (!down && !north) edges.add(new Edge(x0,y0,z0, x0,y1,z0));
+                    if (!up && !north) edges.add(new Edge(x0,y1,z0, x0,y1,z1));
+                    if (!up && !south) edges.add(new Edge(x0,y1,z1, x0,y0,z1));
+                    if (!down && !south) edges.add(new Edge(x0,y0,z1, x0,y0,z0));
+                }
+                // 東面
+                if (!east) {
+                    if (!down && !north) edges.add(new Edge(x1,y0,z0, x1,y1,z0));
+                    if (!up && !north) edges.add(new Edge(x1,y1,z0, x1,y1,z1));
+                    if (!up && !south) edges.add(new Edge(x1,y1,z1, x1,y0,z1));
+                    if (!down && !south) edges.add(new Edge(x1,y0,z1, x1,y0,z0));
+                }
             }
 
-            // エッジを描画
             for (Edge e : edges) {
-                drawEdge(vertexConsumer, viewMatrix, e.x1, e.y1, e.z1, e.x2, e.y2, e.z2, ri, gi, bi, ai);
+                vc.vertex(mat, e.x1, e.y1, e.z1).color(ri,gi,bi,ai).texture(0f,0f).overlay(0).light(0xF000F0).normal(0f,1f,0f);
+                vc.vertex(mat, e.x2, e.y2, e.z2).color(ri,gi,bi,ai).texture(0f,0f).overlay(0).light(0xF000F0).normal(0f,1f,0f);
             }
 
             immediate.draw(RenderLayer.getLines());
-
             GL11.glDepthMask(true);
             GL11.glEnable(GL11.GL_DEPTH_TEST);
-
         } catch (Throwable t) {
             OreMiner.LOGGER.error("Error rendering highlights", t);
-            try {
-                GL11.glDepthMask(true);
-                GL11.glEnable(GL11.GL_DEPTH_TEST);
-            } catch (Throwable ignored) {}
+            try { GL11.glDepthMask(true); GL11.glEnable(GL11.GL_DEPTH_TEST); } catch (Throwable ignored) {}
         }
     }
 
-    /**
-     * エッジが外周にあるかチェックして追加
-     */
-    private static void checkAndAddEdge(Set<Edge> edges, Set<BlockPos> blocks, BlockPos pos,
-                                        float x1, float y1, float z1, float x2, float y2, float z2,
-                                        int dx, int dy, int dz) {
-        // このエッジに隣接する可能性のあるブロックをチェック
-        boolean isOutline = !blocks.contains(pos.add(dx, dy, dz));
-
-        if (isOutline) {
-            edges.add(new Edge(x1, y1, z1, x2, y2, z2));
-        }
-    }
-
-    private static void drawEdge(VertexConsumer vc, Matrix4f mat,
-                                 float ax, float ay, float az,
-                                 float bx, float by, float bz,
-                                 int ri, int gi, int bi, int ai) {
-        vc.vertex(mat, ax, ay, az)
-                .color(ri, gi, bi, ai)
-                .texture(0f, 0f)
-                .overlay(0)
-                .light(0xF000F0)
-                .normal(0f, 1f, 0f);
-
-        vc.vertex(mat, bx, by, bz)
-                .color(ri, gi, bi, ai)
-                .texture(0f, 0f)
-                .overlay(0)
-                .light(0xF000F0)
-                .normal(0f, 1f, 0f);
-    }
-
-    /**
-     * エッジクラス：2つの頂点を持つ線分
-     */
     private static class Edge {
         final float x1, y1, z1, x2, y2, z2;
         private final int hash;
 
         Edge(float x1, float y1, float z1, float x2, float y2, float z2) {
-            // 座標を正規化（小さい方を先に）
-            if (compare(x1, y1, z1, x2, y2, z2) <= 0) {
-                this.x1 = x1; this.y1 = y1; this.z1 = z1;
-                this.x2 = x2; this.y2 = y2; this.z2 = z2;
+            if (cmp(x1,y1,z1, x2,y2,z2) <= 0) {
+                this.x1=x1; this.y1=y1; this.z1=z1; this.x2=x2; this.y2=y2; this.z2=z2;
             } else {
-                this.x1 = x2; this.y1 = y2; this.z1 = z2;
-                this.x2 = x1; this.y2 = y1; this.z2 = z1;
+                this.x1=x2; this.y1=y2; this.z1=z2; this.x2=x1; this.y2=y1; this.z2=z1;
             }
-            this.hash = computeHash();
+            hash = Objects.hash(this.x1, this.y1, this.z1, this.x2, this.y2, this.z2);
         }
 
-        private int compare(float ax, float ay, float az, float bx, float by, float bz) {
-            int cmp = Float.compare(ax, bx);
-            if (cmp != 0) return cmp;
-            cmp = Float.compare(ay, by);
-            if (cmp != 0) return cmp;
-            return Float.compare(az, bz);
+        int cmp(float ax,float ay,float az, float bx,float by,float bz) {
+            int c = Float.compare(ax,bx); if(c!=0)return c;
+            c = Float.compare(ay,by); if(c!=0)return c;
+            return Float.compare(az,bz);
         }
 
-        private int computeHash() {
-            int result = Float.floatToIntBits(x1);
-            result = 31 * result + Float.floatToIntBits(y1);
-            result = 31 * result + Float.floatToIntBits(z1);
-            result = 31 * result + Float.floatToIntBits(x2);
-            result = 31 * result + Float.floatToIntBits(y2);
-            result = 31 * result + Float.floatToIntBits(z2);
-            return result;
-        }
-
-        @Override
-        public int hashCode() {
-            return hash;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (!(obj instanceof Edge)) return false;
-            Edge other = (Edge) obj;
-            return Float.compare(x1, other.x1) == 0 &&
-                    Float.compare(y1, other.y1) == 0 &&
-                    Float.compare(z1, other.z1) == 0 &&
-                    Float.compare(x2, other.x2) == 0 &&
-                    Float.compare(y2, other.y2) == 0 &&
-                    Float.compare(z2, other.z2) == 0;
+        public int hashCode() { return hash; }
+        public boolean equals(Object o) {
+            if(!(o instanceof Edge))return false;
+            Edge e=(Edge)o;
+            return x1==e.x1 && y1==e.y1 && z1==e.z1 && x2==e.x2 && y2==e.y2 && z2==e.z2;
         }
     }
 }

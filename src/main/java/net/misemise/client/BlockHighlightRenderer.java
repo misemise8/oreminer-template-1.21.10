@@ -9,8 +9,7 @@ import net.misemise.OreMiner;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 public class BlockHighlightRenderer {
     private static final Set<BlockPos> highlightedBlocks = new HashSet<>();
@@ -53,7 +52,6 @@ public class BlockHighlightRenderer {
         }
 
         try {
-            // 深度テストを無効化（壁越しに見える）
             GL11.glDisable(GL11.GL_DEPTH_TEST);
             GL11.glDepthMask(false);
 
@@ -71,6 +69,9 @@ public class BlockHighlightRenderer {
             Matrix4f viewMatrix = new Matrix4f(positionMatrix);
             viewMatrix.translate(-camX, -camY, -camZ);
 
+            // エッジを収集（重複を排除）
+            Set<Edge> edges = new HashSet<>();
+
             for (BlockPos pos : blocksCopy) {
                 float x0 = pos.getX();
                 float y0 = pos.getY();
@@ -79,76 +80,58 @@ public class BlockHighlightRenderer {
                 float y1 = pos.getY() + 1.0f;
                 float z1 = pos.getZ() + 1.0f;
 
-                // 隣接ブロックをチェック
-                boolean hasNorth = blocksCopy.contains(pos.north());
-                boolean hasSouth = blocksCopy.contains(pos.south());
-                boolean hasWest = blocksCopy.contains(pos.west());
-                boolean hasEast = blocksCopy.contains(pos.east());
-                boolean hasDown = blocksCopy.contains(pos.down());
-                boolean hasUp = blocksCopy.contains(pos.up());
+                // 各エッジについて、外周エッジかチェック
+                // 12本のエッジ（ブロックの各辺）
 
-                // 底面（下に隣接なし）
-                if (!hasDown) {
-                    drawEdge(vertexConsumer, viewMatrix, x0, y0, z0, x1, y0, z0, ri, gi, bi, ai);
-                    drawEdge(vertexConsumer, viewMatrix, x1, y0, z0, x1, y0, z1, ri, gi, bi, ai);
-                    drawEdge(vertexConsumer, viewMatrix, x1, y0, z1, x0, y0, z1, ri, gi, bi, ai);
-                    drawEdge(vertexConsumer, viewMatrix, x0, y0, z1, x0, y0, z0, ri, gi, bi, ai);
-                }
+                // 底面の4本のエッジ
+                checkAndAddEdge(edges, blocksCopy, pos, x0, y0, z0, x1, y0, z0, 0, -1, 0);
+                checkAndAddEdge(edges, blocksCopy, pos, x1, y0, z0, x1, y0, z1, 1, -1, 0);
+                checkAndAddEdge(edges, blocksCopy, pos, x1, y0, z1, x0, y0, z1, 0, -1, 1);
+                checkAndAddEdge(edges, blocksCopy, pos, x0, y0, z1, x0, y0, z0, -1, -1, 0);
 
-                // 上面（上に隣接なし）
-                if (!hasUp) {
-                    drawEdge(vertexConsumer, viewMatrix, x0, y1, z0, x1, y1, z0, ri, gi, bi, ai);
-                    drawEdge(vertexConsumer, viewMatrix, x1, y1, z0, x1, y1, z1, ri, gi, bi, ai);
-                    drawEdge(vertexConsumer, viewMatrix, x1, y1, z1, x0, y1, z1, ri, gi, bi, ai);
-                    drawEdge(vertexConsumer, viewMatrix, x0, y1, z1, x0, y1, z0, ri, gi, bi, ai);
-                }
+                // 上面の4本のエッジ
+                checkAndAddEdge(edges, blocksCopy, pos, x0, y1, z0, x1, y1, z0, 0, 1, 0);
+                checkAndAddEdge(edges, blocksCopy, pos, x1, y1, z0, x1, y1, z1, 1, 1, 0);
+                checkAndAddEdge(edges, blocksCopy, pos, x1, y1, z1, x0, y1, z1, 0, 1, 1);
+                checkAndAddEdge(edges, blocksCopy, pos, x0, y1, z1, x0, y1, z0, -1, 1, 0);
 
-                // 北面（北に隣接なし）
-                if (!hasNorth) {
-                    drawEdge(vertexConsumer, viewMatrix, x0, y0, z0, x1, y0, z0, ri, gi, bi, ai);
-                    drawEdge(vertexConsumer, viewMatrix, x1, y0, z0, x1, y1, z0, ri, gi, bi, ai);
-                    drawEdge(vertexConsumer, viewMatrix, x1, y1, z0, x0, y1, z0, ri, gi, bi, ai);
-                    drawEdge(vertexConsumer, viewMatrix, x0, y1, z0, x0, y0, z0, ri, gi, bi, ai);
-                }
+                // 縦の4本のエッジ
+                checkAndAddEdge(edges, blocksCopy, pos, x0, y0, z0, x0, y1, z0, -1, 0, 0);
+                checkAndAddEdge(edges, blocksCopy, pos, x1, y0, z0, x1, y1, z0, 1, 0, 0);
+                checkAndAddEdge(edges, blocksCopy, pos, x1, y0, z1, x1, y1, z1, 1, 0, 1);
+                checkAndAddEdge(edges, blocksCopy, pos, x0, y0, z1, x0, y1, z1, -1, 0, 1);
+            }
 
-                // 南面（南に隣接なし）
-                if (!hasSouth) {
-                    drawEdge(vertexConsumer, viewMatrix, x0, y0, z1, x1, y0, z1, ri, gi, bi, ai);
-                    drawEdge(vertexConsumer, viewMatrix, x1, y0, z1, x1, y1, z1, ri, gi, bi, ai);
-                    drawEdge(vertexConsumer, viewMatrix, x1, y1, z1, x0, y1, z1, ri, gi, bi, ai);
-                    drawEdge(vertexConsumer, viewMatrix, x0, y1, z1, x0, y0, z1, ri, gi, bi, ai);
-                }
-
-                // 西面（西に隣接なし）
-                if (!hasWest) {
-                    drawEdge(vertexConsumer, viewMatrix, x0, y0, z0, x0, y1, z0, ri, gi, bi, ai);
-                    drawEdge(vertexConsumer, viewMatrix, x0, y1, z0, x0, y1, z1, ri, gi, bi, ai);
-                    drawEdge(vertexConsumer, viewMatrix, x0, y1, z1, x0, y0, z1, ri, gi, bi, ai);
-                    drawEdge(vertexConsumer, viewMatrix, x0, y0, z1, x0, y0, z0, ri, gi, bi, ai);
-                }
-
-                // 東面（東に隣接なし）
-                if (!hasEast) {
-                    drawEdge(vertexConsumer, viewMatrix, x1, y0, z0, x1, y1, z0, ri, gi, bi, ai);
-                    drawEdge(vertexConsumer, viewMatrix, x1, y1, z0, x1, y1, z1, ri, gi, bi, ai);
-                    drawEdge(vertexConsumer, viewMatrix, x1, y1, z1, x1, y0, z1, ri, gi, bi, ai);
-                    drawEdge(vertexConsumer, viewMatrix, x1, y0, z1, x1, y0, z0, ri, gi, bi, ai);
-                }
+            // エッジを描画
+            for (Edge e : edges) {
+                drawEdge(vertexConsumer, viewMatrix, e.x1, e.y1, e.z1, e.x2, e.y2, e.z2, ri, gi, bi, ai);
             }
 
             immediate.draw(RenderLayer.getLines());
 
-            // 深度テストを元に戻す
             GL11.glDepthMask(true);
             GL11.glEnable(GL11.GL_DEPTH_TEST);
 
         } catch (Throwable t) {
             OreMiner.LOGGER.error("Error rendering highlights", t);
-            // エラー時も深度テストを元に戻す
             try {
                 GL11.glDepthMask(true);
                 GL11.glEnable(GL11.GL_DEPTH_TEST);
             } catch (Throwable ignored) {}
+        }
+    }
+
+    /**
+     * エッジが外周にあるかチェックして追加
+     */
+    private static void checkAndAddEdge(Set<Edge> edges, Set<BlockPos> blocks, BlockPos pos,
+                                        float x1, float y1, float z1, float x2, float y2, float z2,
+                                        int dx, int dy, int dz) {
+        // このエッジに隣接する可能性のあるブロックをチェック
+        boolean isOutline = !blocks.contains(pos.add(dx, dy, dz));
+
+        if (isOutline) {
+            edges.add(new Edge(x1, y1, z1, x2, y2, z2));
         }
     }
 
@@ -169,5 +152,60 @@ public class BlockHighlightRenderer {
                 .overlay(0)
                 .light(0xF000F0)
                 .normal(0f, 1f, 0f);
+    }
+
+    /**
+     * エッジクラス：2つの頂点を持つ線分
+     */
+    private static class Edge {
+        final float x1, y1, z1, x2, y2, z2;
+        private final int hash;
+
+        Edge(float x1, float y1, float z1, float x2, float y2, float z2) {
+            // 座標を正規化（小さい方を先に）
+            if (compare(x1, y1, z1, x2, y2, z2) <= 0) {
+                this.x1 = x1; this.y1 = y1; this.z1 = z1;
+                this.x2 = x2; this.y2 = y2; this.z2 = z2;
+            } else {
+                this.x1 = x2; this.y1 = y2; this.z1 = z2;
+                this.x2 = x1; this.y2 = y1; this.z2 = z1;
+            }
+            this.hash = computeHash();
+        }
+
+        private int compare(float ax, float ay, float az, float bx, float by, float bz) {
+            int cmp = Float.compare(ax, bx);
+            if (cmp != 0) return cmp;
+            cmp = Float.compare(ay, by);
+            if (cmp != 0) return cmp;
+            return Float.compare(az, bz);
+        }
+
+        private int computeHash() {
+            int result = Float.floatToIntBits(x1);
+            result = 31 * result + Float.floatToIntBits(y1);
+            result = 31 * result + Float.floatToIntBits(z1);
+            result = 31 * result + Float.floatToIntBits(x2);
+            result = 31 * result + Float.floatToIntBits(y2);
+            result = 31 * result + Float.floatToIntBits(z2);
+            return result;
+        }
+
+        @Override
+        public int hashCode() {
+            return hash;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof Edge)) return false;
+            Edge other = (Edge) obj;
+            return Float.compare(x1, other.x1) == 0 &&
+                    Float.compare(y1, other.y1) == 0 &&
+                    Float.compare(z1, other.z1) == 0 &&
+                    Float.compare(x2, other.x2) == 0 &&
+                    Float.compare(y2, other.y2) == 0 &&
+                    Float.compare(z2, other.z2) == 0;
+        }
     }
 }

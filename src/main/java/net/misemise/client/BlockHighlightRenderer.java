@@ -60,7 +60,7 @@ public class BlockHighlightRenderer {
                 float x0 = p.getX(), y0 = p.getY(), z0 = p.getZ();
                 float x1 = x0 + 1, y1 = y0 + 1, z1 = z0 + 1;
 
-                // 6方向チェック
+                // すべての隣接ブロックをチェック
                 boolean down = blocksCopy.contains(p.down());
                 boolean up = blocksCopy.contains(p.up());
                 boolean north = blocksCopy.contains(p.north());
@@ -68,48 +68,26 @@ public class BlockHighlightRenderer {
                 boolean west = blocksCopy.contains(p.west());
                 boolean east = blocksCopy.contains(p.east());
 
-                // 底面
-                if (!down) {
-                    if (!west && !north) edges.add(new Edge(x0,y0,z0, x1,y0,z0));
-                    if (!east && !north) edges.add(new Edge(x1,y0,z0, x1,y0,z1));
-                    if (!east && !south) edges.add(new Edge(x1,y0,z1, x0,y0,z1));
-                    if (!west && !south) edges.add(new Edge(x0,y0,z1, x0,y0,z0));
-                }
-                // 上面
-                if (!up) {
-                    if (!west && !north) edges.add(new Edge(x0,y1,z0, x1,y1,z0));
-                    if (!east && !north) edges.add(new Edge(x1,y1,z0, x1,y1,z1));
-                    if (!east && !south) edges.add(new Edge(x1,y1,z1, x0,y1,z1));
-                    if (!west && !south) edges.add(new Edge(x0,y1,z1, x0,y1,z0));
-                }
-                // 北面
-                if (!north) {
-                    if (!west && !down) edges.add(new Edge(x0,y0,z0, x1,y0,z0));
-                    if (!east && !down) edges.add(new Edge(x1,y0,z0, x1,y1,z0));
-                    if (!east && !up) edges.add(new Edge(x1,y1,z0, x0,y1,z0));
-                    if (!west && !up) edges.add(new Edge(x0,y1,z0, x0,y0,z0));
-                }
-                // 南面
-                if (!south) {
-                    if (!west && !down) edges.add(new Edge(x0,y0,z1, x1,y0,z1));
-                    if (!east && !down) edges.add(new Edge(x1,y0,z1, x1,y1,z1));
-                    if (!east && !up) edges.add(new Edge(x1,y1,z1, x0,y1,z1));
-                    if (!west && !up) edges.add(new Edge(x0,y1,z1, x0,y0,z1));
-                }
-                // 西面
-                if (!west) {
-                    if (!down && !north) edges.add(new Edge(x0,y0,z0, x0,y1,z0));
-                    if (!up && !north) edges.add(new Edge(x0,y1,z0, x0,y1,z1));
-                    if (!up && !south) edges.add(new Edge(x0,y1,z1, x0,y0,z1));
-                    if (!down && !south) edges.add(new Edge(x0,y0,z1, x0,y0,z0));
-                }
-                // 東面
-                if (!east) {
-                    if (!down && !north) edges.add(new Edge(x1,y0,z0, x1,y1,z0));
-                    if (!up && !north) edges.add(new Edge(x1,y1,z0, x1,y1,z1));
-                    if (!up && !south) edges.add(new Edge(x1,y1,z1, x1,y0,z1));
-                    if (!down && !south) edges.add(new Edge(x1,y0,z1, x1,y0,z0));
-                }
+                // 各エッジについて、そのエッジが外側かどうかをチェック
+                // エッジが外側 = そのエッジに隣接する2つの面が両方とも外側を向いている
+
+                // 底面の4つのエッジ
+                if (!down && !north) edges.add(new Edge(x0,y0,z0, x1,y0,z0)); // 北側
+                if (!down && !east) edges.add(new Edge(x1,y0,z0, x1,y0,z1));  // 東側
+                if (!down && !south) edges.add(new Edge(x1,y0,z1, x0,y0,z1)); // 南側
+                if (!down && !west) edges.add(new Edge(x0,y0,z1, x0,y0,z0));  // 西側
+
+                // 上面の4つのエッジ
+                if (!up && !north) edges.add(new Edge(x0,y1,z0, x1,y1,z0)); // 北側
+                if (!up && !east) edges.add(new Edge(x1,y1,z0, x1,y1,z1));  // 東側
+                if (!up && !south) edges.add(new Edge(x1,y1,z1, x0,y1,z1)); // 南側
+                if (!up && !west) edges.add(new Edge(x0,y1,z1, x0,y1,z0));  // 西側
+
+                // 縦の4つのエッジ
+                if (!north && !west) edges.add(new Edge(x0,y0,z0, x0,y1,z0)); // 北西
+                if (!north && !east) edges.add(new Edge(x1,y0,z0, x1,y1,z0)); // 北東
+                if (!south && !east) edges.add(new Edge(x1,y0,z1, x1,y1,z1)); // 南東
+                if (!south && !west) edges.add(new Edge(x0,y0,z1, x0,y1,z1)); // 南西
             }
 
             for (Edge e : edges) {

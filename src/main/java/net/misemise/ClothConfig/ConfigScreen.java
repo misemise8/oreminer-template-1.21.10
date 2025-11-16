@@ -6,6 +6,8 @@ import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
 
+import static net.minecraft.datafixer.FixUtil.getColorName;
+
 public class ConfigScreen {
     public static Screen createConfigScreen(Screen parent) {
         ConfigBuilder builder = ConfigBuilder.create()
@@ -68,6 +70,56 @@ public class ConfigScreen {
                 .setSaveConsumer(value -> Config.debugLog = value)
                 .build());
 
+        // アウトラインの色
+        general.addEntry(entryBuilder.startSelector(
+                        Text.translatable("config.oreminer.outlineColor"),
+                        new String[]{"Cyan", "Red", "Yellow", "Green", "Purple", "White"},
+                        getColorName(Config.outlineColor))
+                .setDefaultValue("Cyan")
+                .setTooltip(Text.translatable("config.oreminer.outlineColor.tooltip"))
+                .setSaveConsumer(value -> {
+                    Config.outlineColor = getColorIndex(value);
+                })
+                .build());
+
+        // 破壊後のブロック数表示
+        general.addEntry(entryBuilder.startBooleanToggle(
+                        Text.translatable("config.oreminer.showBlocksMinedCount"),
+                        Config.showBlocksMinedCount)
+                .setDefaultValue(true)
+                .setTooltip(Text.translatable("config.oreminer.showBlocksMinedCount.tooltip"))
+                .setSaveConsumer(value -> Config.showBlocksMinedCount = value)
+                .build());
+
+        // 破壊前のブロック数プレビュー
+        general.addEntry(entryBuilder.startBooleanToggle(
+                        Text.translatable("config.oreminer.showBlocksPreview"),
+                        Config.showBlocksPreview)
+                .setDefaultValue(true)
+                .setTooltip(Text.translatable("config.oreminer.showBlocksPreview.tooltip"))
+                .setSaveConsumer(value -> Config.showBlocksPreview = value)
+                .build());
+
+
         return builder.build();
+    }
+
+    private static String getColorName(int index) {
+        String[] colors = {"Cyan", "Red", "Yellow", "Green", "Purple", "White"};
+        if (index >= 0 && index < colors.length) {
+            return colors[index];
+        }
+        return "Cyan";
+    }
+
+    private static int getColorIndex(String name) {
+        switch (name) {
+            case "Red": return 1;
+            case "Yellow": return 2;
+            case "Green": return 3;
+            case "Purple": return 4;
+            case "White": return 5;
+            default: return 0; // Cyan
+        }
     }
 }

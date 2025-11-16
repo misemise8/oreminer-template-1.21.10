@@ -13,13 +13,23 @@ import java.util.*;
 
 public class BlockHighlightRenderer {
     private static final Set<BlockPos> highlightedBlocks = new HashSet<>();
-    private static final float RED = 0.0f;
-    private static final float GREEN = 0.8f;
-    private static final float BLUE = 1.0f;
-    private static final float ALPHA = 0.6f;
 
     public static void register() {
         OreMiner.LOGGER.info("BlockHighlightRenderer initialized");
+    }
+
+    /**
+     * 設定された色を取得
+     */
+    private static float[] getColor() {
+        switch (net.misemise.ClothConfig.Config.outlineColor) {
+            case 1: return new float[]{1.0f, 0.0f, 0.0f, 0.6f}; // Red
+            case 2: return new float[]{1.0f, 1.0f, 0.0f, 0.6f}; // Yellow
+            case 3: return new float[]{0.0f, 1.0f, 0.0f, 0.6f}; // Green
+            case 4: return new float[]{0.8f, 0.2f, 1.0f, 0.6f}; // Purple
+            case 5: return new float[]{1.0f, 1.0f, 1.0f, 0.6f}; // White
+            default: return new float[]{0.0f, 0.8f, 1.0f, 0.6f}; // Cyan (default)
+        }
     }
 
     public static void setHighlightedBlocks(Set<BlockPos> blocks) {
@@ -49,7 +59,13 @@ public class BlockHighlightRenderer {
             GL11.glDepthMask(false);
 
             VertexConsumer vc = immediate.getBuffer(RenderLayer.getLines());
-            int ri = (int)(RED * 255), gi = (int)(GREEN * 255), bi = (int)(BLUE * 255), ai = (int)(ALPHA * 255);
+
+            // 色を取得
+            float[] color = getColor();
+            int ri = (int)(color[0] * 255);
+            int gi = (int)(color[1] * 255);
+            int bi = (int)(color[2] * 255);
+            int ai = (int)(color[3] * 255);
 
             Matrix4f mat = new Matrix4f(positionMatrix);
             mat.translate(-(float)camera.getPos().x, -(float)camera.getPos().y, -(float)camera.getPos().z);

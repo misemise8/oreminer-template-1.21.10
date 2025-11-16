@@ -11,6 +11,7 @@ import net.misemise.ClothConfig.ConfigScreen;
 import net.misemise.OreMiner;
 import net.misemise.OreUtils;
 import net.misemise.client.BlockHighlightRenderer;
+import net.misemise.client.VeinMiningHud;
 import net.misemise.network.NetworkHandler;
 
 import java.util.HashSet;
@@ -22,6 +23,7 @@ import java.util.Set;
 public class KeyStateTracker {
     private static boolean lastKeyState = false;
     private static BlockPos lastTargetPos = null;
+    private static int lastBlockCount = 0;
 
     public static void register() {
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
@@ -44,7 +46,9 @@ public class KeyStateTracker {
                 // キーが離されたらハイライトをクリア
                 if (lastTargetPos != null) {
                     BlockHighlightRenderer.clearHighlights();
+                    VeinMiningHud.clearPreview();
                     lastTargetPos = null;
+                    lastBlockCount = 0;
                 }
             }
 
@@ -65,7 +69,9 @@ public class KeyStateTracker {
             // ブロックを見ていない場合はクリア
             if (lastTargetPos != null) {
                 BlockHighlightRenderer.clearHighlights();
+                VeinMiningHud.clearPreview();
                 lastTargetPos = null;
+                lastBlockCount = 0;
             }
             return;
         }
@@ -78,7 +84,9 @@ public class KeyStateTracker {
         if (!OreUtils.isOre(targetState) || !OreUtils.isPickaxe(client.player.getMainHandStack())) {
             if (lastTargetPos != null) {
                 BlockHighlightRenderer.clearHighlights();
+                VeinMiningHud.clearPreview();
                 lastTargetPos = null;
+                lastBlockCount = 0;
             }
             return;
         }
@@ -93,6 +101,14 @@ public class KeyStateTracker {
         // 一括破壊対象のブロックを計算
         Set<BlockPos> connectedBlocks = findConnectedOres(client, targetPos, targetState);
         BlockHighlightRenderer.setHighlightedBlocks(connectedBlocks);
+
+        // ブロック数を保存してHUDに表示（設定がオンの場合）
+        lastBlockCount = connectedBlocks.size();
+        if (Config.showBlocksPreview && lastBlockCount > 0) {
+            VeinMiningHud.setPreviewCount(lastBlockCount);
+        } else {
+            VeinMiningHud.clearPreview();
+        }
     }
 
     /**

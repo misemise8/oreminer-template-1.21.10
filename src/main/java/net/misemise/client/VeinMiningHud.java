@@ -15,12 +15,21 @@ public class VeinMiningHud {
     private static long lastMineTime = 0;
     private static final long DISPLAY_DURATION = 3000; // 3秒間表示
 
+    private static int previewCount = 0;
+    private static boolean showPreview = false;
+
     public static void register() {
         OreMiner.LOGGER.info("Registering VeinMiningHud...");
 
+        // 破壊後のブロック数表示
         HudRenderCallback.EVENT.register((drawContext, tickDelta) -> {
             MinecraftClient client = MinecraftClient.getInstance();
             if (client.player == null) return;
+
+            // 設定で破壊後の表示がオフなら何も表示しない
+            if (!net.misemise.ClothConfig.Config.showBlocksMinedCount) {
+                return;
+            }
 
             long currentTime = System.currentTimeMillis();
             if (currentTime - lastMineTime > DISPLAY_DURATION) {
@@ -45,25 +54,37 @@ public class VeinMiningHud {
             int x = (screenWidth - textWidth) / 2 + 40;
             int y = screenHeight / 2 + 30;
 
-            /*
-            // 背景（DrawContext の fill を使う）
-            int padding = 5;
-            drawContext.fill(
-                    x - padding,
-                    y - padding,
-                    x + textWidth + padding,
-                    y + textRenderer.fontHeight + padding,
-                    0xAA000000 // より濃い半透明の黒
-            );
-
-             */
-            // テキストを描画（DrawContext 側のメソッドを利用）
-            // drawTextWithShadow(TextRenderer, Text, x, y, color)
+            // テキストを描画
             drawContext.drawTextWithShadow(textRenderer, message, x, y, 0xFFFFAA00);
 
             if (currentTime - lastMineTime < 100) {
                 OreMiner.LOGGER.info("Drawing HUD: count={}, x={}, y={}", blocksMinedCount, x, y);
             }
+        });
+
+        // プレビュー表示用のHUDコールバック
+        HudRenderCallback.EVENT.register((drawContext, tickDelta) -> {
+            MinecraftClient client = MinecraftClient.getInstance();
+            if (client.player == null || !showPreview) return;
+
+            // 設定で破壊前プレビューがオフなら何も表示しない
+            if (!net.misemise.ClothConfig.Config.showBlocksPreview) {
+                return;
+            }
+
+            TextRenderer textRenderer = client.textRenderer;
+            int screenWidth = client.getWindow().getScaledWidth();
+            int screenHeight = client.getWindow().getScaledHeight();
+
+            String previewStr = previewCount + " blocks";
+            Text previewMessage = Text.literal(previewStr);
+            int textWidth = textRenderer.getWidth(previewStr);
+
+            int x = (screenWidth - textWidth) / 2;
+            int y = screenHeight / 2 + 50;
+
+            // プレビューテキストを描画（緑色）
+            drawContext.drawTextWithShadow(textRenderer, previewMessage, x, y, 0xFF00FFAA);
         });
 
         OreMiner.LOGGER.info("VeinMiningHud registered successfully");
@@ -78,5 +99,15 @@ public class VeinMiningHud {
     public static void addBlocksMined(int count) {
         blocksMinedCount += count;
         lastMineTime = System.currentTimeMillis();
+    }
+
+    public static void setPreviewCount(int count) {
+        previewCount = count;
+        showPreview = true;
+    }
+
+    public static void clearPreview() {
+        showPreview = false;
+        previewCount = 0;
     }
 }

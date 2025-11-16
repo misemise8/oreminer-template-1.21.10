@@ -11,6 +11,12 @@
   "config.oreminer.autoCollectExp.tooltip": "経験値オーブを自動的に回収します",
   "config.oreminer.debugLog": "デバッグログ",
   "config.oreminer.debugLog.tooltip": "トラブルシューティング用のデバッグログを有効にします",
+  "config.oreminer.outlineColor": "アウトライン色",
+  "config.oreminer.outlineColor.tooltip": "ブロックハイライトの線の色を設定します",
+  "config.oreminer.showBlocksMinedCount": "破壊後のブロック数表示",
+  "config.oreminer.showBlocksMinedCount.tooltip": "ブロックを破壊した後に、破壊数を表示します",
+  "config.oreminer.showBlocksPreview": "破壊前のブロック数表示",
+  "config.oreminer.showBlocksPreview.tooltip": "ブロックを破壊する前に、破壊予定数を表示します",
 
   "key.oreminer.veinminer": "一括採掘 (長押し)",
   "key.oreminer.openconfig": "OreMiner設定を開く"

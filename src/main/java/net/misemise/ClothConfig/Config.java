@@ -29,6 +29,16 @@ public class Config {
     // デバッグログを出力するか
     public static boolean debugLog = false;
 
+    // アウトラインの色 (0: シアン, 1: 赤, 2: 黄色, 3: 緑, 4: 紫, 5: 白)
+    public static int outlineColor = 0;
+
+    // 破壊後のブロック数表示
+    public static boolean showBlocksMinedCount = true;
+
+    // 破壊前のブロック数プレビュー
+    public static boolean showBlocksPreview = true;
+
+
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final File CONFIG_FILE = new File(
             FabricLoader.getInstance().getConfigDir().toFile(),

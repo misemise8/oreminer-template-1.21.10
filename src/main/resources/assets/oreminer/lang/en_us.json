@@ -11,6 +11,13 @@
   "config.oreminer.autoCollectExp.tooltip": "Automatically collect experience orbs",
   "config.oreminer.debugLog": "Debug Log",
   "config.oreminer.debugLog.tooltip": "Enable debug logging for troubleshooting",
+  "config.oreminer.outlineColor": "Outline Color",
+  "config.oreminer.outlineColor.tooltip": "Color of the block highlight outline",
+  "config.oreminer.showBlocksMinedCount": "Show Blocks Mined",
+  "config.oreminer.showBlocksMinedCount.tooltip": "Display the number of blocks mined after breaking",
+  "config.oreminer.showBlocksPreview": "Show Blocks Preview",
+  "config.oreminer.showBlocksPreview.tooltip": "Display the number of blocks that will be mined before breaking",
+
 
   "key.oreminer.veinminer": "Vein Miner (Hold)",
   "key.oreminer.openconfig": "Open OreMiner Config",

@@ -8,6 +8,9 @@
 	"injectors": {
 		"defaultRequire": 1
 	},
+	"client": [
+		"WorldRendererMixin"
+	],
 	"overwrites": {
 		"requireAnnotations": true
 	}

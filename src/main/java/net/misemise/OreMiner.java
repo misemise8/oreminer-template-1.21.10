@@ -2,11 +2,11 @@ package net.misemise;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
-import net.minecraft.block.BlockState;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
+import net.misemise.ClothConfig.Config;
+import net.misemise.network.NetworkHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,32 +18,50 @@ public class OreMiner implements ModInitializer {
 	public void onInitialize() {
 		LOGGER.info("OreMiner initialized!");
 
-		// AFTERイベント：鉱石の一括破壊
-		PlayerBlockBreakEvents.AFTER.register((world, player, pos, state, entity) -> {
+		// 設定を読み込む
+		Config.load();
+
+		// ※ クライアント側は ClientModInitializer で registerClient() を呼ぶ想定
+		try {
+			NetworkHandler.registerServer();
+		} catch (Throwable t) {
+			LOGGER.warn("NetworkHandler.registerServer() failed or already registered: {}", t.toString());
+		}
+
+		// BEFOREイベント：鉱石をつるはしで壊す場合、標準処理をキャンセルしてMod側で処理
+		PlayerBlockBreakEvents.BEFORE.register((world, player, pos, state, entity) -> {
 			// クライアント側では何もしない
-			if (world.isClient()) return;
+			if (world.isClient()) return true;
 
 			// サーバー側のチェック
-			if (!(world instanceof ServerWorld serverWorld)) return;
-			if (!(player instanceof ServerPlayerEntity serverPlayer)) return;
+			if (!(world instanceof ServerWorld serverWorld)) return true;
+			if (!(player instanceof ServerPlayerEntity serverPlayer)) return true;
 
 			ItemStack held = serverPlayer.getMainHandStack();
 
-			// つるはしでない場合はスキップ
-			if (!OreUtils.isPickaxe(held)) {
-				return;
+			// つるはしで鉱石を壊す場合のみ特別処理
+			if (OreUtils.isPickaxe(held) && OreUtils.isOre(state)) {
+				// キーが押されているかチェック
+				boolean keyPressed = NetworkHandler.isKeyPressed(serverPlayer.getUuid());
+				LOGGER.info("Ore break attempt: key pressed = {}", keyPressed);
+
+				if (!keyPressed) {
+					// キーが押されていない場合は通常処理
+					return true;
+				}
+
+				LOGGER.info("Vein mining triggered at {} by player {}",
+						pos, serverPlayer.getName().getString());
+
+				// Mod側で一括破壊を実行
+				OreBreaker.breakConnectedOres(serverWorld, pos, state, serverPlayer, held);
+
+				// 標準のブロック破壊処理をキャンセル
+				return false;
 			}
 
-			// 鉱石でない場合はスキップ
-			if (!OreUtils.isOre(state)) {
-				return;
-			}
-
-			LOGGER.info("Starting vein mining at {} for player {}",
-					pos, serverPlayer.getName().getString());
-
-			// 隣接する鉱石を一括破壊（最初のブロックは既に壊れている）
-			OreBreaker.breakConnectedOres(serverWorld, pos, state, serverPlayer, held);
+			// 通常通り処理
+			return true;
 		});
 	}
 }

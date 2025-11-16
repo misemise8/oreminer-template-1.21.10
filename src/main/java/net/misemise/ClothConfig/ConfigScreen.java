@@ -13,17 +13,16 @@ public class ConfigScreen {
                 .setTitle(Text.translatable("config.oreminer.title"))
                 .setSavingRunnable(() -> {
                     Config.save();
-                    // 設定が保存されたことを通知
                 });
-
-        // 一般設定カテゴリ
-        ConfigCategory general = builder.getOrCreateCategory(
-                Text.translatable("config.oreminer.category.general"));
 
         ConfigEntryBuilder entryBuilder = builder.entryBuilder();
 
+        // ==================== 採掘設定カテゴリ ====================
+        ConfigCategory mining = builder.getOrCreateCategory(
+                Text.translatable("config.oreminer.category.mining"));
+
         // 最大ブロック数
-        general.addEntry(entryBuilder.startIntSlider(
+        mining.addEntry(entryBuilder.startIntSlider(
                         Text.translatable("config.oreminer.maxBlocks"),
                         Config.maxBlocks,
                         1, 256)
@@ -33,7 +32,7 @@ public class ConfigScreen {
                 .build());
 
         // 斜め探索
-        general.addEntry(entryBuilder.startBooleanToggle(
+        mining.addEntry(entryBuilder.startBooleanToggle(
                         Text.translatable("config.oreminer.searchDiagonal"),
                         Config.searchDiagonal)
                 .setDefaultValue(true)
@@ -42,7 +41,7 @@ public class ConfigScreen {
                 .build());
 
         // 自動回収
-        general.addEntry(entryBuilder.startBooleanToggle(
+        mining.addEntry(entryBuilder.startBooleanToggle(
                         Text.translatable("config.oreminer.autoCollect"),
                         Config.autoCollect)
                 .setDefaultValue(true)
@@ -51,7 +50,7 @@ public class ConfigScreen {
                 .build());
 
         // 経験値自動回収
-        general.addEntry(entryBuilder.startBooleanToggle(
+        mining.addEntry(entryBuilder.startBooleanToggle(
                         Text.translatable("config.oreminer.autoCollectExp"),
                         Config.autoCollectExp)
                 .setDefaultValue(true)
@@ -59,17 +58,12 @@ public class ConfigScreen {
                 .setSaveConsumer(value -> Config.autoCollectExp = value)
                 .build());
 
-        // デバッグログ
-        general.addEntry(entryBuilder.startBooleanToggle(
-                        Text.translatable("config.oreminer.debugLog"),
-                        Config.debugLog)
-                .setDefaultValue(false)
-                .setTooltip(Text.translatable("config.oreminer.debugLog.tooltip"))
-                .setSaveConsumer(value -> Config.debugLog = value)
-                .build());
+        // ==================== アウトライン設定カテゴリ ====================
+        ConfigCategory outline = builder.getOrCreateCategory(
+                Text.translatable("config.oreminer.category.outline"));
 
         // アウトラインの色
-        general.addEntry(entryBuilder.startSelector(
+        outline.addEntry(entryBuilder.startSelector(
                         Text.translatable("config.oreminer.outlineColor"),
                         new String[]{"Cyan", "Red", "Yellow", "Green", "Purple", "White"},
                         getColorName(Config.outlineColor))
@@ -80,8 +74,23 @@ public class ConfigScreen {
                 })
                 .build());
 
+        // アウトラインの太さ（スライダーに変更）
+        outline.addEntry(entryBuilder.startIntSlider(
+                        Text.translatable("config.oreminer.outlineThickness"),
+                        (int)(Config.outlineThickness * 10), // 内部的に10倍して整数化
+                        10, 50) // 1.0 ~ 5.0 を 10 ~ 50 として扱う
+                .setDefaultValue(20) // デフォルト 2.0
+                .setTooltip(Text.translatable("config.oreminer.outlineThickness.tooltip"))
+                .setSaveConsumer(value -> Config.outlineThickness = value / 10.0f)
+                .setTextGetter(value -> Text.literal(String.format("%.1f", value / 10.0f)))
+                .build());
+
+        // ==================== その他設定カテゴリ ====================
+        ConfigCategory other = builder.getOrCreateCategory(
+                Text.translatable("config.oreminer.category.other"));
+
         // 破壊後のブロック数表示
-        general.addEntry(entryBuilder.startBooleanToggle(
+        other.addEntry(entryBuilder.startBooleanToggle(
                         Text.translatable("config.oreminer.showBlocksMinedCount"),
                         Config.showBlocksMinedCount)
                 .setDefaultValue(true)
@@ -90,7 +99,7 @@ public class ConfigScreen {
                 .build());
 
         // 破壊前のブロック数プレビュー
-        general.addEntry(entryBuilder.startBooleanToggle(
+        other.addEntry(entryBuilder.startBooleanToggle(
                         Text.translatable("config.oreminer.showBlocksPreview"),
                         Config.showBlocksPreview)
                 .setDefaultValue(true)
@@ -98,15 +107,13 @@ public class ConfigScreen {
                 .setSaveConsumer(value -> Config.showBlocksPreview = value)
                 .build());
 
-        // アウトラインの太さ
-        general.addEntry(entryBuilder.startFloatField(
-                        Text.translatable("config.oreminer.outlineThickness"),
-                        Config.outlineThickness)
-                .setDefaultValue(2.0f)
-                .setMin(1.0f)
-                .setMax(5.0f)
-                .setTooltip(Text.translatable("config.oreminer.outlineThickness.tooltip"))
-                .setSaveConsumer(value -> Config.outlineThickness = value)
+        // デバッグログ
+        other.addEntry(entryBuilder.startBooleanToggle(
+                        Text.translatable("config.oreminer.debugLog"),
+                        Config.debugLog)
+                .setDefaultValue(false)
+                .setTooltip(Text.translatable("config.oreminer.debugLog.tooltip"))
+                .setSaveConsumer(value -> Config.debugLog = value)
                 .build());
 
         return builder.build();

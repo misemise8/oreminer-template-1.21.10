@@ -1,6 +1,8 @@
 {
   "config.oreminer.title": "OreMiner Config",
-  "config.oreminer.category.general": "General Settings",
+  "config.oreminer.category.mining": "Mining Settings",
+  "config.oreminer.category.outline": "Outline Settings",
+  "config.oreminer.category.other": "Other Settings",
   "config.oreminer.maxBlocks": "Max Blocks",
   "config.oreminer.maxBlocks.tooltip": "Maximum number of ore blocks to break at once",
   "config.oreminer.searchDiagonal": "Search Diagonal",

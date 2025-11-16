@@ -1,6 +1,8 @@
 {
   "config.oreminer.title": "OreMiner 設定",
-  "config.oreminer.category.general": "一般設定",
+  "config.oreminer.category.mining": "採掘設定",
+  "config.oreminer.category.outline": "アウトライン設定",
+  "config.oreminer.category.other": "その他設定",
   "config.oreminer.maxBlocks": "最大破壊数",
   "config.oreminer.maxBlocks.tooltip": "一度に破壊できる鉱石ブロックの最大数",
   "config.oreminer.searchDiagonal": "斜め探索",

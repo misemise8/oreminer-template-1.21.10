@@ -41,6 +41,9 @@ public class Config {
     // アウトラインの太さ (1.0 ~ 5.0)
     public static float outlineThickness = 2.0f;
 
+    // トグルモード（true: 押すとオン/オフ切り替え, false: 押している間だけ有効）
+    public static boolean toggleMode = false;
+
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final File CONFIG_FILE = new File(
             FabricLoader.getInstance().getConfigDir().toFile(),
@@ -64,6 +67,7 @@ public class Config {
                     showBlocksMinedCount = data.showBlocksMinedCount;
                     showBlocksPreview = data.showBlocksPreview;
                     outlineThickness = data.outlineThickness;
+                    toggleMode = data.toggleMode;
                 }
                 OreMiner.LOGGER.info("Config loaded from file");
             } catch (IOException e) {
@@ -73,8 +77,8 @@ public class Config {
             save(); // デフォルト設定で保存
         }
 
-        OreMiner.LOGGER.info("Config: maxBlocks={}, searchDiagonal={}, autoCollect={}, autoCollectExp={}, debugLog={}, outlineColor={}, showBlocksMinedCount={}, showBlocksPreview={}, outlineThickness={}",
-                maxBlocks, searchDiagonal, autoCollect, autoCollectExp, debugLog, outlineColor, showBlocksMinedCount, showBlocksPreview, outlineThickness);
+        OreMiner.LOGGER.info("Config: maxBlocks={}, searchDiagonal={}, autoCollect={}, autoCollectExp={}, debugLog={}, outlineColor={}, showBlocksMinedCount={}, showBlocksPreview={}, outlineThickness={}, toggleMode={}",
+                maxBlocks, searchDiagonal, autoCollect, autoCollectExp, debugLog, outlineColor, showBlocksMinedCount, showBlocksPreview, outlineThickness, toggleMode);
     }
 
     /**
@@ -92,6 +96,7 @@ public class Config {
             data.showBlocksMinedCount = showBlocksMinedCount;
             data.showBlocksPreview = showBlocksPreview;
             data.outlineThickness = outlineThickness;
+            data.toggleMode = toggleMode;
 
             GSON.toJson(data, writer);
             OreMiner.LOGGER.info("Config saved to file");
@@ -110,5 +115,6 @@ public class Config {
         boolean showBlocksMinedCount = true;
         boolean showBlocksPreview = true;
         float outlineThickness = 2.0f;
+        boolean toggleMode = false;
     }
 }

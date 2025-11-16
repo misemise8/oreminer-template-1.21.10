@@ -11,6 +11,8 @@
   "config.oreminer.autoCollect.tooltip": "Automatically collect dropped items to inventory",
   "config.oreminer.autoCollectExp": "Auto Collect Experience",
   "config.oreminer.autoCollectExp.tooltip": "Automatically collect experience orbs",
+  "config.oreminer.toggleMode": "Toggle Mode",
+  "config.oreminer.toggleMode.tooltip": "Press key to toggle on/off (instead of holding)",
   "config.oreminer.debugLog": "Debug Log",
   "config.oreminer.debugLog.tooltip": "Enable debug logging for troubleshooting",
   "config.oreminer.outlineColor": "Outline Color",

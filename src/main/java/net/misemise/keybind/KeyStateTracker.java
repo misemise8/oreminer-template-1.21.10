@@ -24,31 +24,56 @@ public class KeyStateTracker {
     private static boolean lastKeyState = false;
     private static BlockPos lastTargetPos = null;
     private static int lastBlockCount = 0;
+    private static boolean toggledOn = false; // トグルモード用の状態
 
     public static void register() {
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (client.player == null || client.world == null) return;
 
             // 一括採掘キーの状態を監視
-            boolean currentKeyState = KeyBindings.isVeinMinerKeyPressed();
+            boolean currentKeyPressed = KeyBindings.isVeinMinerKeyPressed();
 
-            // キー状態が変わった場合、サーバーに通知
-            if (currentKeyState != lastKeyState) {
-                OreMiner.LOGGER.info("Key state changed: {} -> {}", lastKeyState, currentKeyState);
-                NetworkHandler.sendKeyState(currentKeyState);
-                lastKeyState = currentKeyState;
-            }
+            // トグルモードの場合
+            if (Config.toggleMode) {
+                // キーが押された瞬間（前回は押されていなかった）
+                if (currentKeyPressed && !lastKeyState) {
+                    toggledOn = !toggledOn; // 状態を反転
+                    OreMiner.LOGGER.info("Toggle mode switched: {}", toggledOn);
+                    NetworkHandler.sendKeyState(toggledOn);
+                }
+                lastKeyState = currentKeyPressed;
 
-            // キーが押されている間、ハイライトを更新
-            if (currentKeyState) {
-                updateHighlight(client);
+                // トグル状態に応じてハイライトを更新
+                if (toggledOn) {
+                    updateHighlight(client);
+                } else {
+                    if (lastTargetPos != null) {
+                        BlockHighlightRenderer.clearHighlights();
+                        VeinMiningHud.clearPreview();
+                        lastTargetPos = null;
+                        lastBlockCount = 0;
+                    }
+                }
             } else {
-                // キーが離されたらハイライトをクリア
-                if (lastTargetPos != null) {
-                    BlockHighlightRenderer.clearHighlights();
-                    VeinMiningHud.clearPreview();
-                    lastTargetPos = null;
-                    lastBlockCount = 0;
+                // 通常モード（押している間だけ有効）
+                // キー状態が変わった場合、サーバーに通知
+                if (currentKeyPressed != lastKeyState) {
+                    OreMiner.LOGGER.info("Key state changed: {} -> {}", lastKeyState, currentKeyPressed);
+                    NetworkHandler.sendKeyState(currentKeyPressed);
+                    lastKeyState = currentKeyPressed;
+                }
+
+                // キーが押されている間、ハイライトを更新
+                if (currentKeyPressed) {
+                    updateHighlight(client);
+                } else {
+                    // キーが離されたらハイライトをクリア
+                    if (lastTargetPos != null) {
+                        BlockHighlightRenderer.clearHighlights();
+                        VeinMiningHud.clearPreview();
+                        lastTargetPos = null;
+                        lastBlockCount = 0;
+                    }
                 }
             }
 

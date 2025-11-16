@@ -7,6 +7,8 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
 
 public class ConfigScreen {
+    private static String lastOpenedCategory = "config.oreminer.category.mining"; // デフォルトは採掘設定
+
     public static Screen createConfigScreen(Screen parent) {
         ConfigBuilder builder = ConfigBuilder.create()
                 .setParentScreen(parent)
@@ -25,8 +27,8 @@ public class ConfigScreen {
         mining.addEntry(entryBuilder.startIntSlider(
                         Text.translatable("config.oreminer.maxBlocks"),
                         Config.maxBlocks,
-                        1, 256)
-                .setDefaultValue(64)
+                        1, 512)
+                .setDefaultValue(512)
                 .setTooltip(Text.translatable("config.oreminer.maxBlocks.tooltip"))
                 .setSaveConsumer(value -> Config.maxBlocks = value)
                 .build());
@@ -56,6 +58,15 @@ public class ConfigScreen {
                 .setDefaultValue(true)
                 .setTooltip(Text.translatable("config.oreminer.autoCollectExp.tooltip"))
                 .setSaveConsumer(value -> Config.autoCollectExp = value)
+                .build());
+
+        // トグルモード
+        mining.addEntry(entryBuilder.startBooleanToggle(
+                        Text.translatable("config.oreminer.toggleMode"),
+                        Config.toggleMode)
+                .setDefaultValue(false)
+                .setTooltip(Text.translatable("config.oreminer.toggleMode.tooltip"))
+                .setSaveConsumer(value -> Config.toggleMode = value)
                 .build());
 
         // ==================== アウトライン設定カテゴリ ====================
@@ -116,7 +127,25 @@ public class ConfigScreen {
                 .setSaveConsumer(value -> Config.debugLog = value)
                 .build());
 
+        // 最後に開いたカテゴリを復元
+        if (lastOpenedCategory.equals("config.oreminer.category.outline")) {
+            builder.setFallbackCategory(outline);
+        } else if (lastOpenedCategory.equals("config.oreminer.category.other")) {
+            builder.setFallbackCategory(other);
+        } else {
+            builder.setFallbackCategory(mining);
+        }
+
         return builder.build();
+    }
+
+    // 開いたカテゴリを記録するメソッド
+    public static void setLastOpenedCategory(String category) {
+        lastOpenedCategory = category;
+    }
+
+    public static String getLastOpenedCategory() {
+        return lastOpenedCategory;
     }
 
     private static String getColorName(int index) {

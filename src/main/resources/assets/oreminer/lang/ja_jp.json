@@ -11,6 +11,8 @@
   "config.oreminer.autoCollect.tooltip": "ドロップしたアイテムを自動的にインベントリに回収します",
   "config.oreminer.autoCollectExp": "経験値自動回収",
   "config.oreminer.autoCollectExp.tooltip": "経験値オーブを自動的に回収します",
+  "config.oreminer.toggleMode": "トグルモード",
+  "config.oreminer.toggleMode.tooltip": "キーを押すとオン/オフ切り替え（長押し不要）",
   "config.oreminer.debugLog": "デバッグログ",
   "config.oreminer.debugLog.tooltip": "トラブルシューティング用のデバッグログを有効にします",
   "config.oreminer.outlineColor": "アウトライン色",

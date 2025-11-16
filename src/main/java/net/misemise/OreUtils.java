@@ -48,7 +48,7 @@ public class OreUtils {
     }
 
     /**
-     * ブロックが鉱石かどうかを判定
+     * ブロックが鉱石かどうかを判定（他MOD対応強化版）
      */
     public static boolean isOre(BlockState state) {
         if (state == null || state.isAir()) {
@@ -56,7 +56,7 @@ public class OreUtils {
         }
 
         try {
-            // カスタムタグで判定
+            // 1. カスタムタグで判定
             if (state.isIn(OREMINER_ORES)) {
                 return true;
             }
@@ -64,10 +64,78 @@ public class OreUtils {
             LOGGER.warn("Failed to check ore tag for {}", state.getBlock(), e);
         }
 
-        // フォールバック：ブロック名に"ore"が含まれるか
         try {
-            String blockName = state.getBlock().toString().toLowerCase();
-            return blockName.contains("ore") || blockName.contains("debris");
+            // 2. Minecraftの共通タグで判定
+            Block block = state.getBlock();
+
+            // c:ores タグ（Fabric/Forge共通タグ）
+            TagKey<Block> commonOresTag = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "ores"));
+            if (state.isIn(commonOresTag)) {
+                return true;
+            }
+
+            // minecraft:*_ores タグ
+            TagKey<Block> minecraftOresTag = TagKey.of(RegistryKeys.BLOCK, Identifier.of("minecraft", "iron_ores"));
+            if (state.isIn(minecraftOresTag)) {
+                return true;
+            }
+        } catch (Throwable e) {
+            // タグが存在しない場合は無視
+        }
+
+        // 3. ブロックIDで判定（他MOD対応）
+        try {
+            String blockId = state.getBlock().toString().toLowerCase();
+
+            // バニラとよくあるMODの鉱石パターン
+            String[] orePatterns = {
+                    "ore",           // 基本的な鉱石
+                    "_ore",          // 末尾が_ore
+                    "ore_",          // ore_で始まる
+                    "debris",        // Ancient Debris
+                    "raw_",          // 粗鉱石ブロック
+                    "nether_",       // ネザー鉱石
+                    "deepslate_",    // 深層鉱石
+                    "end_ore",       // エンド鉱石（MOD）
+                    "dense_ore",     // 高密度鉱石（MOD）
+                    "poor_ore",      // 貧鉱石（MOD）
+                    "rich_ore",      // 富鉱石（MOD）
+            };
+
+            for (String pattern : orePatterns) {
+                if (blockId.contains(pattern)) {
+                    LOGGER.debug("Detected ore by pattern '{}': {}", pattern, blockId);
+                    return true;
+                }
+            }
+
+            // 4. MOD特有のパターン
+            // Create MOD
+            if (blockId.contains("zinc_ore") || blockId.contains("crushed_")) {
+                return true;
+            }
+
+            // Mekanism
+            if (blockId.contains("osmium") || blockId.contains("fluorite")) {
+                return true;
+            }
+
+            // Thermal Series
+            if (blockId.contains("tin_ore") || blockId.contains("lead_ore") ||
+                    blockId.contains("silver_ore") || blockId.contains("nickel_ore")) {
+                return true;
+            }
+
+            // Applied Energistics 2
+            if (blockId.contains("certus") || blockId.contains("charged_certus")) {
+                return true;
+            }
+
+            // Immersive Engineering
+            if (blockId.contains("aluminum_ore") || blockId.contains("uranium_ore")) {
+                return true;
+            }
+
         } catch (Throwable e) {
             LOGGER.warn("Failed to check ore by name", e);
         }

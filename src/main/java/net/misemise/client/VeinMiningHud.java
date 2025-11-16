@@ -26,6 +26,11 @@ public class VeinMiningHud {
             MinecraftClient client = MinecraftClient.getInstance();
             if (client.player == null) return;
 
+            // プレビュー表示中は破壊後の表示を隠す
+            if (showPreview) {
+                return;
+            }
+
             // 設定で破壊後の表示がオフなら何も表示しない
             if (!net.misemise.ClothConfig.Config.showBlocksMinedCount) {
                 return;

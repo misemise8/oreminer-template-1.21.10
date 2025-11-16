@@ -72,9 +72,9 @@ public class BlockHighlightRenderer {
 
             Set<Edge> edges = new HashSet<>();
 
-            // アウトラインの太さ
+            // アウトラインの太さを取得
             float thickness = net.misemise.ClothConfig.Config.outlineThickness;
-            float offset = thickness * 0.001f; // 太さに応じたオフセット
+            float baseOffset = 0.002f; // 基本オフセット量
 
             for (BlockPos p : blocksCopy) {
                 float x0 = p.getX(), y0 = p.getY(), z0 = p.getZ();
@@ -110,21 +110,45 @@ public class BlockHighlightRenderer {
                 if (!south && !west) edges.add(new Edge(x0,y0,z1, x0,y1,z1)); // 南西
             }
 
-            for (Edge e : edges) {
-                vc.vertex(mat, e.x1, e.y1, e.z1).color(ri,gi,bi,ai).texture(0f,0f).overlay(0).light(0xF000F0).normal(0f,1f,0f);
-                vc.vertex(mat, e.x2, e.y2, e.z2).color(ri,gi,bi,ai).texture(0f,0f).overlay(0).light(0xF000F0).normal(0f,1f,0f);
+            // 太さを表現するために複数レイヤー描画
+            for (float layer = 0; layer < thickness; layer += 0.5f) {
+                float layerOffset = layer * baseOffset;
+
+                for (Edge e : edges) {
+                    // 元の線
+                    vc.vertex(mat, e.x1, e.y1, e.z1).color(ri,gi,bi,ai).texture(0f,0f).overlay(0).light(0xF000F0).normal(0f,1f,0f);
+                    vc.vertex(mat, e.x2, e.y2, e.z2).color(ri,gi,bi,ai).texture(0f,0f).overlay(0).light(0xF000F0).normal(0f,1f,0f);
+
+                    if (layer > 0) {
+                        // オフセット付きの線を6方向に描画
+                        vc.vertex(mat, e.x1 + layerOffset, e.y1, e.z1).color(ri,gi,bi,ai).texture(0f,0f).overlay(0).light(0xF000F0).normal(0f,1f,0f);
+                        vc.vertex(mat, e.x2 + layerOffset, e.y2, e.z2).color(ri,gi,bi,ai).texture(0f,0f).overlay(0).light(0xF000F0).normal(0f,1f,0f);
+
+                        vc.vertex(mat, e.x1 - layerOffset, e.y1, e.z1).color(ri,gi,bi,ai).texture(0f,0f).overlay(0).light(0xF000F0).normal(0f,1f,0f);
+                        vc.vertex(mat, e.x2 - layerOffset, e.y2, e.z2).color(ri,gi,bi,ai).texture(0f,0f).overlay(0).light(0xF000F0).normal(0f,1f,0f);
+
+                        vc.vertex(mat, e.x1, e.y1 + layerOffset, e.z1).color(ri,gi,bi,ai).texture(0f,0f).overlay(0).light(0xF000F0).normal(0f,1f,0f);
+                        vc.vertex(mat, e.x2, e.y2 + layerOffset, e.z2).color(ri,gi,bi,ai).texture(0f,0f).overlay(0).light(0xF000F0).normal(0f,1f,0f);
+
+                        vc.vertex(mat, e.x1, e.y1 - layerOffset, e.z1).color(ri,gi,bi,ai).texture(0f,0f).overlay(0).light(0xF000F0).normal(0f,1f,0f);
+                        vc.vertex(mat, e.x2, e.y2 - layerOffset, e.z2).color(ri,gi,bi,ai).texture(0f,0f).overlay(0).light(0xF000F0).normal(0f,1f,0f);
+
+                        vc.vertex(mat, e.x1, e.y1, e.z1 + layerOffset).color(ri,gi,bi,ai).texture(0f,0f).overlay(0).light(0xF000F0).normal(0f,1f,0f);
+                        vc.vertex(mat, e.x2, e.y2, e.z2 + layerOffset).color(ri,gi,bi,ai).texture(0f,0f).overlay(0).light(0xF000F0).normal(0f,1f,0f);
+
+                        vc.vertex(mat, e.x1, e.y1, e.z1 - layerOffset).color(ri,gi,bi,ai).texture(0f,0f).overlay(0).light(0xF000F0).normal(0f,1f,0f);
+                        vc.vertex(mat, e.x2, e.y2, e.z2 - layerOffset).color(ri,gi,bi,ai).texture(0f,0f).overlay(0).light(0xF000F0).normal(0f,1f,0f);
+                    }
+                }
             }
 
             immediate.draw(RenderLayer.getLines());
 
-            // 線の太さをリセット
-            GL11.glLineWidth(1.0f);
             GL11.glDepthMask(true);
             GL11.glEnable(GL11.GL_DEPTH_TEST);
         } catch (Throwable t) {
             OreMiner.LOGGER.error("Error rendering highlights", t);
             try {
-                GL11.glLineWidth(1.0f);
                 GL11.glDepthMask(true);
                 GL11.glEnable(GL11.GL_DEPTH_TEST);
             } catch (Throwable ignored) {}

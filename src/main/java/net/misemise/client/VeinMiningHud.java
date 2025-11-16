@@ -80,11 +80,11 @@ public class VeinMiningHud {
             Text previewMessage = Text.literal(previewStr);
             int textWidth = textRenderer.getWidth(previewStr);
 
-            int x = (screenWidth - textWidth) / 2;
-            int y = screenHeight / 2 + 50;
+            int x = (screenWidth - textWidth) / 2 + 40;
+            int y = screenHeight / 2 + 30;
 
-            // プレビューテキストを描画（緑色）
-            drawContext.drawTextWithShadow(textRenderer, previewMessage, x, y, 0xFF00FFAA);
+            // プレビューテキストを描画（破壊後と同じオレンジ色）
+            drawContext.drawTextWithShadow(textRenderer, previewMessage, x, y, 0xFFFFAA00);
         });
 
         OreMiner.LOGGER.info("VeinMiningHud registered successfully");

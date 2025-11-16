@@ -72,6 +72,10 @@ public class BlockHighlightRenderer {
 
             Set<Edge> edges = new HashSet<>();
 
+            // アウトラインの太さ
+            float thickness = net.misemise.ClothConfig.Config.outlineThickness;
+            float offset = thickness * 0.001f; // 太さに応じたオフセット
+
             for (BlockPos p : blocksCopy) {
                 float x0 = p.getX(), y0 = p.getY(), z0 = p.getZ();
                 float x1 = x0 + 1, y1 = y0 + 1, z1 = z0 + 1;
@@ -112,11 +116,18 @@ public class BlockHighlightRenderer {
             }
 
             immediate.draw(RenderLayer.getLines());
+
+            // 線の太さをリセット
+            GL11.glLineWidth(1.0f);
             GL11.glDepthMask(true);
             GL11.glEnable(GL11.GL_DEPTH_TEST);
         } catch (Throwable t) {
             OreMiner.LOGGER.error("Error rendering highlights", t);
-            try { GL11.glDepthMask(true); GL11.glEnable(GL11.GL_DEPTH_TEST); } catch (Throwable ignored) {}
+            try {
+                GL11.glLineWidth(1.0f);
+                GL11.glDepthMask(true);
+                GL11.glEnable(GL11.GL_DEPTH_TEST);
+            } catch (Throwable ignored) {}
         }
     }
 

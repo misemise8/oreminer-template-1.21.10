@@ -6,8 +6,6 @@ import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
 
-import static net.minecraft.datafixer.FixUtil.getColorName;
-
 public class ConfigScreen {
     public static Screen createConfigScreen(Screen parent) {
         ConfigBuilder builder = ConfigBuilder.create()
@@ -100,6 +98,16 @@ public class ConfigScreen {
                 .setSaveConsumer(value -> Config.showBlocksPreview = value)
                 .build());
 
+        // アウトラインの太さ
+        general.addEntry(entryBuilder.startFloatField(
+                        Text.translatable("config.oreminer.outlineThickness"),
+                        Config.outlineThickness)
+                .setDefaultValue(2.0f)
+                .setMin(1.0f)
+                .setMax(5.0f)
+                .setTooltip(Text.translatable("config.oreminer.outlineThickness.tooltip"))
+                .setSaveConsumer(value -> Config.outlineThickness = value)
+                .build());
 
         return builder.build();
     }

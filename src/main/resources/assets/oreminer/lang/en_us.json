@@ -17,7 +17,8 @@
   "config.oreminer.showBlocksMinedCount.tooltip": "Display the number of blocks mined after breaking",
   "config.oreminer.showBlocksPreview": "Show Blocks Preview",
   "config.oreminer.showBlocksPreview.tooltip": "Display the number of blocks that will be mined before breaking",
-
+  "config.oreminer.outlineThickness": "Outline Thickness",
+  "config.oreminer.outlineThickness.tooltip": "Thickness of the block highlight outline (1.0 - 5.0)",
 
   "key.oreminer.veinminer": "Vein Miner (Hold)",
   "key.oreminer.openconfig": "Open OreMiner Config",

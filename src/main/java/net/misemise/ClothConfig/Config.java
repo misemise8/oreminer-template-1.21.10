@@ -38,6 +38,8 @@ public class Config {
     // 破壊前のブロック数プレビュー
     public static boolean showBlocksPreview = true;
 
+    // アウトラインの太さ (1.0 ~ 5.0)
+    public static float outlineThickness = 2.0f;
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final File CONFIG_FILE = new File(
@@ -58,6 +60,10 @@ public class Config {
                     autoCollect = data.autoCollect;
                     autoCollectExp = data.autoCollectExp;
                     debugLog = data.debugLog;
+                    outlineColor = data.outlineColor;
+                    showBlocksMinedCount = data.showBlocksMinedCount;
+                    showBlocksPreview = data.showBlocksPreview;
+                    outlineThickness = data.outlineThickness;
                 }
                 OreMiner.LOGGER.info("Config loaded from file");
             } catch (IOException e) {
@@ -67,8 +73,8 @@ public class Config {
             save(); // デフォルト設定で保存
         }
 
-        OreMiner.LOGGER.info("Config: maxBlocks={}, searchDiagonal={}, autoCollect={}, autoCollectExp={}, debugLog={}",
-                maxBlocks, searchDiagonal, autoCollect, autoCollectExp, debugLog);
+        OreMiner.LOGGER.info("Config: maxBlocks={}, searchDiagonal={}, autoCollect={}, autoCollectExp={}, debugLog={}, outlineColor={}, showBlocksMinedCount={}, showBlocksPreview={}, outlineThickness={}",
+                maxBlocks, searchDiagonal, autoCollect, autoCollectExp, debugLog, outlineColor, showBlocksMinedCount, showBlocksPreview, outlineThickness);
     }
 
     /**
@@ -82,6 +88,10 @@ public class Config {
             data.autoCollect = autoCollect;
             data.autoCollectExp = autoCollectExp;
             data.debugLog = debugLog;
+            data.outlineColor = outlineColor;
+            data.showBlocksMinedCount = showBlocksMinedCount;
+            data.showBlocksPreview = showBlocksPreview;
+            data.outlineThickness = outlineThickness;
 
             GSON.toJson(data, writer);
             OreMiner.LOGGER.info("Config saved to file");
@@ -96,5 +106,9 @@ public class Config {
         boolean autoCollect = true;
         boolean autoCollectExp = true;
         boolean debugLog = false;
+        int outlineColor = 0;
+        boolean showBlocksMinedCount = true;
+        boolean showBlocksPreview = true;
+        float outlineThickness = 2.0f;
     }
 }

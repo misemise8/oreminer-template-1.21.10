@@ -1,0 +1,120 @@
+package net.misemise.ClothConfig;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import net.fabricmc.loader.api.FabricLoader;
+import net.misemise.OreMiner;
+
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+
+/**
+ * OreMiner設定クラス
+ */
+public class Config {
+    // 一括破壊の最大ブロック数
+    public static int maxBlocks = 64;
+
+    // 斜め方向も探索するか（26方向 vs 6方向）
+    public static boolean searchDiagonal = true;
+
+    // 自動回収を有効にするか
+    public static boolean autoCollect = true;
+
+    // 経験値も自動回収するか
+    public static boolean autoCollectExp = true;
+
+    // デバッグログを出力するか
+    public static boolean debugLog = false;
+
+    // アウトラインの色 (0: シアン, 1: 赤, 2: 黄色, 3: 緑, 4: 紫, 5: 白)
+    public static int outlineColor = 0;
+
+    // 破壊後のブロック数表示
+    public static boolean showBlocksMinedCount = true;
+
+    // 破壊前のブロック数プレビュー
+    public static boolean showBlocksPreview = true;
+
+    // アウトラインの太さ (1.0 ~ 5.0)
+    public static float outlineThickness = 2.0f;
+
+    // トグルモード（true: 押すとオン/オフ切り替え, false: 押している間だけ有効）
+    public static boolean toggleMode = false;
+
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    private static final File CONFIG_FILE = new File(
+            FabricLoader.getInstance().getConfigDir().toFile(),
+            "oreminer.json"
+    );
+
+    /**
+     * 設定を読み込む
+     */
+    public static void load() {
+        if (CONFIG_FILE.exists()) {
+            try (FileReader reader = new FileReader(CONFIG_FILE)) {
+                ConfigData data = GSON.fromJson(reader, ConfigData.class);
+                if (data != null) {
+                    maxBlocks = data.maxBlocks;
+                    searchDiagonal = data.searchDiagonal;
+                    autoCollect = data.autoCollect;
+                    autoCollectExp = data.autoCollectExp;
+                    debugLog = data.debugLog;
+                    outlineColor = data.outlineColor;
+                    showBlocksMinedCount = data.showBlocksMinedCount;
+                    showBlocksPreview = data.showBlocksPreview;
+                    outlineThickness = data.outlineThickness;
+                    toggleMode = data.toggleMode;
+                }
+                OreMiner.LOGGER.info("Config loaded from file");
+            } catch (IOException e) {
+                OreMiner.LOGGER.error("Failed to load config", e);
+            }
+        } else {
+            save(); // デフォルト設定で保存
+        }
+
+        OreMiner.LOGGER.info("Config: maxBlocks={}, searchDiagonal={}, autoCollect={}, autoCollectExp={}, debugLog={}, outlineColor={}, showBlocksMinedCount={}, showBlocksPreview={}, outlineThickness={}, toggleMode={}",
+                maxBlocks, searchDiagonal, autoCollect, autoCollectExp, debugLog, outlineColor, showBlocksMinedCount, showBlocksPreview, outlineThickness, toggleMode);
+    }
+
+    /**
+     * 設定を保存する
+     */
+    public static void save() {
+        try (FileWriter writer = new FileWriter(CONFIG_FILE)) {
+            ConfigData data = new ConfigData();
+            data.maxBlocks = maxBlocks;
+            data.searchDiagonal = searchDiagonal;
+            data.autoCollect = autoCollect;
+            data.autoCollectExp = autoCollectExp;
+            data.debugLog = debugLog;
+            data.outlineColor = outlineColor;
+            data.showBlocksMinedCount = showBlocksMinedCount;
+            data.showBlocksPreview = showBlocksPreview;
+            data.outlineThickness = outlineThickness;
+            data.toggleMode = toggleMode;
+
+            GSON.toJson(data, writer);
+            OreMiner.LOGGER.info("Config saved to file");
+        } catch (IOException e) {
+            OreMiner.LOGGER.error("Failed to save config", e);
+        }
+    }
+
+    private static class ConfigData {
+        int maxBlocks = 64;
+        boolean searchDiagonal = true;
+        boolean autoCollect = true;
+        boolean autoCollectExp = true;
+        boolean debugLog = false;
+        int outlineColor = 0;
+        boolean showBlocksMinedCount = true;
+        boolean showBlocksPreview = true;
+        float outlineThickness = 2.0f;
+        boolean toggleMode = false;
+    }
+}

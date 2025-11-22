@@ -1,0 +1,31 @@
+{
+  "config.oreminer.title": "OreMiner Config",
+  "config.oreminer.category.mining": "Mining Settings",
+  "config.oreminer.category.outline": "Outline Settings",
+  "config.oreminer.category.other": "Other Settings",
+  "config.oreminer.maxBlocks": "Max Blocks",
+  "config.oreminer.maxBlocks.tooltip": "Maximum number of ore blocks to break at once",
+  "config.oreminer.searchDiagonal": "Search Diagonal",
+  "config.oreminer.searchDiagonal.tooltip": "Search diagonally (26 directions) instead of just adjacent (6 directions)",
+  "config.oreminer.autoCollect": "Auto Collect",
+  "config.oreminer.autoCollect.tooltip": "Automatically collect dropped items to inventory",
+  "config.oreminer.autoCollectExp": "Auto Collect Experience",
+  "config.oreminer.autoCollectExp.tooltip": "Automatically collect experience orbs",
+  "config.oreminer.toggleMode": "Toggle Mode",
+  "config.oreminer.toggleMode.tooltip": "Press key to toggle on/off (instead of holding)",
+  "config.oreminer.debugLog": "Debug Log",
+  "config.oreminer.debugLog.tooltip": "Enable debug logging for troubleshooting",
+  "config.oreminer.outlineColor": "Outline Color",
+  "config.oreminer.outlineColor.tooltip": "Color of the block highlight outline",
+  "config.oreminer.showBlocksMinedCount": "Show Blocks Mined",
+  "config.oreminer.showBlocksMinedCount.tooltip": "Display the number of blocks mined after breaking",
+  "config.oreminer.showBlocksPreview": "Show Blocks Preview",
+  "config.oreminer.showBlocksPreview.tooltip": "Display the number of blocks that will be mined before breaking",
+  "config.oreminer.outlineThickness": "Outline Thickness",
+  "config.oreminer.outlineThickness.tooltip": "Thickness of the block highlight outline (1.0 - 5.0)",
+
+  "key.oreminer.veinminer": "Vein Miner (Hold)",
+  "key.oreminer.openconfig": "Open OreMiner Config",
+
+  "key.category.oreminer.general": "OreMiner"
+}

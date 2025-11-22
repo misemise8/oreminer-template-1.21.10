@@ -3,15 +3,15 @@
 	"id": "oreminer",
 	"version": "${version}",
 	"name": "OreMiner",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"description": "Efficient Vein Mining Mod!!!",
 	"authors": [
-		"Me!"
+		"Misemise"
 	],
 	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
+		"homepage": "",
+		"contact and issue": "https://x.com/misemiseeeeeeee"
 	},
-	"license": "CC0-1.0",
+	"license": "MIT",
 	"icon": "assets/oreminer/icon.png",
 	"environment": "*",
 	"entrypoints": {

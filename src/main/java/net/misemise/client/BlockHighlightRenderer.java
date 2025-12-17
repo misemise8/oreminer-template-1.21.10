@@ -1,7 +1,7 @@
 package net.misemise.client;
 
 import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.render.RenderLayers;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.util.math.BlockPos;
@@ -63,19 +63,11 @@ public class BlockHighlightRenderer {
         }
 
         try {
-            // TEMPORARILY DISABLED: 1.21.11 API investigation needed
-            // The RenderLayer.getLines() and Camera.getPos() methods have changed
-            // TODO: Find correct line rendering API for 1.21.11
-            if (true) {
-                return; // Temporarily skip rendering
-            }
-
             GL11.glDisable(GL11.GL_DEPTH_TEST);
             GL11.glDepthMask(false);
 
-            // TODO: Replace with correct RenderLayer for 1.21.11
-            // RenderLayer.getDebugLineStrip(double) might work
-            VertexConsumer vc = null; // immediate.getBuffer(RenderLayer.???);
+            // Use RenderLayers.lines() for 1.21.11 (moved from RenderLayer.getLines())
+            VertexConsumer vc = immediate.getBuffer(RenderLayers.lines());
 
             // 色を取得
             float[] color = getColor();
@@ -84,10 +76,10 @@ public class BlockHighlightRenderer {
             int bi = (int) (color[2] * 255);
             int ai = (int) (color[3] * 255);
 
-            // TODO: Fix Camera API for 1.21.11
-            // Vec3d cameraPos = camera.getPos(); // This method may have been renamed
+            // Use Camera.getCameraPos() for 1.21.11 (renamed from Camera.getPos())
+            Vec3d cameraPos = camera.getCameraPos();
             Matrix4f mat = new Matrix4f(positionMatrix);
-            // mat.translate(...camera position...);
+            mat.translate(-(float) cameraPos.x, -(float) cameraPos.y, -(float) cameraPos.z);
 
             Set<Edge> edges = new HashSet<>();
 
@@ -146,49 +138,51 @@ public class BlockHighlightRenderer {
                 float layerOffset = layer * baseOffset;
 
                 for (Edge e : edges) {
-                    // 元の線
+                    // 元の線 (1.21.11: must include lineWidth attribute)
                     vc.vertex(mat, e.x1, e.y1, e.z1).color(ri, gi, bi, ai).texture(0f, 0f).overlay(0).light(0xF000F0)
-                            .normal(0f, 1f, 0f);
+                            .lineWidth(1.0f).normal(0f, 1f, 0f);
                     vc.vertex(mat, e.x2, e.y2, e.z2).color(ri, gi, bi, ai).texture(0f, 0f).overlay(0).light(0xF000F0)
-                            .normal(0f, 1f, 0f);
+                            .lineWidth(1.0f).normal(0f, 1f, 0f);
 
                     if (layer > 0) {
                         // オフセット付きの線を6方向に描画
                         vc.vertex(mat, e.x1 + layerOffset, e.y1, e.z1).color(ri, gi, bi, ai).texture(0f, 0f).overlay(0)
-                                .light(0xF000F0).normal(0f, 1f, 0f);
+                                .light(0xF000F0).lineWidth(1.0f).normal(0f, 1f, 0f);
                         vc.vertex(mat, e.x2 + layerOffset, e.y2, e.z2).color(ri, gi, bi, ai).texture(0f, 0f).overlay(0)
-                                .light(0xF000F0).normal(0f, 1f, 0f);
+                                .light(0xF000F0).lineWidth(1.0f).normal(0f, 1f, 0f);
 
                         vc.vertex(mat, e.x1 - layerOffset, e.y1, e.z1).color(ri, gi, bi, ai).texture(0f, 0f).overlay(0)
-                                .light(0xF000F0).normal(0f, 1f, 0f);
+                                .light(0xF000F0).lineWidth(1.0f).normal(0f, 1f, 0f);
                         vc.vertex(mat, e.x2 - layerOffset, e.y2, e.z2).color(ri, gi, bi, ai).texture(0f, 0f).overlay(0)
-                                .light(0xF000F0).normal(0f, 1f, 0f);
+                                .light(0xF000F0).lineWidth(1.0f).normal(0f, 1f, 0f);
 
                         vc.vertex(mat, e.x1, e.y1 + layerOffset, e.z1).color(ri, gi, bi, ai).texture(0f, 0f).overlay(0)
-                                .light(0xF000F0).normal(0f, 1f, 0f);
+                                .light(0xF000F0).lineWidth(1.0f).normal(0f, 1f, 0f);
                         vc.vertex(mat, e.x2, e.y2 + layerOffset, e.z2).color(ri, gi, bi, ai).texture(0f, 0f).overlay(0)
-                                .light(0xF000F0).normal(0f, 1f, 0f);
+                                .light(0xF000F0).lineWidth(1.0f).normal(0f, 1f, 0f);
 
                         vc.vertex(mat, e.x1, e.y1 - layerOffset, e.z1).color(ri, gi, bi, ai).texture(0f, 0f).overlay(0)
-                                .light(0xF000F0).normal(0f, 1f, 0f);
+                                .light(0xF000F0).lineWidth(1.0f).normal(0f, 1f, 0f);
                         vc.vertex(mat, e.x2, e.y2 - layerOffset, e.z2).color(ri, gi, bi, ai).texture(0f, 0f).overlay(0)
-                                .light(0xF000F0).normal(0f, 1f, 0f);
+                                .light(0xF000F0).lineWidth(1.0f).normal(0f, 1f, 0f);
 
                         vc.vertex(mat, e.x1, e.y1, e.z1 + layerOffset).color(ri, gi, bi, ai).texture(0f, 0f).overlay(0)
-                                .light(0xF000F0).normal(0f, 1f, 0f);
+                                .light(0xF000F0).lineWidth(1.0f).normal(0f, 1f, 0f);
                         vc.vertex(mat, e.x2, e.y2, e.z2 + layerOffset).color(ri, gi, bi, ai).texture(0f, 0f).overlay(0)
-                                .light(0xF000F0).normal(0f, 1f, 0f);
+                                .light(0xF000F0).lineWidth(1.0f).normal(0f, 1f, 0f);
 
                         vc.vertex(mat, e.x1, e.y1, e.z1 - layerOffset).color(ri, gi, bi, ai).texture(0f, 0f).overlay(0)
-                                .light(0xF000F0).normal(0f, 1f, 0f);
+                                .light(0xF000F0).lineWidth(1.0f).normal(0f, 1f, 0f);
                         vc.vertex(mat, e.x2, e.y2, e.z2 - layerOffset).color(ri, gi, bi, ai).texture(0f, 0f).overlay(0)
-                                .light(0xF000F0).normal(0f, 1f, 0f);
+                                .light(0xF000F0).lineWidth(1.0f).normal(0f, 1f, 0f);
                     }
                 }
             }
 
-            // TODO: Replace with correct draw call for 1.21.11
-            // immediate.draw(RenderLayer.???);
+            // Draw the lines with the correct RenderLayer for 1.21.11
+            immediate.draw(RenderLayers.lines());
+
+            GL11.glDepthMask(true);
             GL11.glEnable(GL11.GL_DEPTH_TEST);
         } catch (Throwable t) {
             OreMiner.LOGGER.error("Error rendering highlights", t);

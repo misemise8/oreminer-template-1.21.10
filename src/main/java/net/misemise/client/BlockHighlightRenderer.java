@@ -5,6 +5,7 @@ import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.misemise.OreMiner;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
@@ -23,12 +24,18 @@ public class BlockHighlightRenderer {
      */
     private static float[] getColor() {
         switch (net.misemise.ClothConfig.Config.outlineColor) {
-            case 1: return new float[]{1.0f, 0.0f, 0.0f, 0.6f}; // Red
-            case 2: return new float[]{1.0f, 1.0f, 0.0f, 0.6f}; // Yellow
-            case 3: return new float[]{0.0f, 1.0f, 0.0f, 0.6f}; // Green
-            case 4: return new float[]{0.8f, 0.2f, 1.0f, 0.6f}; // Purple
-            case 5: return new float[]{1.0f, 1.0f, 1.0f, 0.6f}; // White
-            default: return new float[]{0.0f, 0.8f, 1.0f, 0.6f}; // Cyan (default)
+            case 1:
+                return new float[] { 1.0f, 0.0f, 0.0f, 0.6f }; // Red
+            case 2:
+                return new float[] { 1.0f, 1.0f, 0.0f, 0.6f }; // Yellow
+            case 3:
+                return new float[] { 0.0f, 1.0f, 0.0f, 0.6f }; // Green
+            case 4:
+                return new float[] { 0.8f, 0.2f, 1.0f, 0.6f }; // Purple
+            case 5:
+                return new float[] { 1.0f, 1.0f, 1.0f, 0.6f }; // White
+            default:
+                return new float[] { 0.0f, 0.8f, 1.0f, 0.6f }; // Cyan (default)
         }
     }
 
@@ -50,25 +57,37 @@ public class BlockHighlightRenderer {
     public static void render(VertexConsumerProvider.Immediate immediate, Camera camera, Matrix4f positionMatrix) {
         Set<BlockPos> blocksCopy;
         synchronized (highlightedBlocks) {
-            if (highlightedBlocks.isEmpty()) return;
+            if (highlightedBlocks.isEmpty())
+                return;
             blocksCopy = new HashSet<>(highlightedBlocks);
         }
 
         try {
+            // TEMPORARILY DISABLED: 1.21.11 API investigation needed
+            // The RenderLayer.getLines() and Camera.getPos() methods have changed
+            // TODO: Find correct line rendering API for 1.21.11
+            if (true) {
+                return; // Temporarily skip rendering
+            }
+
             GL11.glDisable(GL11.GL_DEPTH_TEST);
             GL11.glDepthMask(false);
 
-            VertexConsumer vc = immediate.getBuffer(RenderLayer.getLines());
+            // TODO: Replace with correct RenderLayer for 1.21.11
+            // RenderLayer.getDebugLineStrip(double) might work
+            VertexConsumer vc = null; // immediate.getBuffer(RenderLayer.???);
 
             // 色を取得
             float[] color = getColor();
-            int ri = (int)(color[0] * 255);
-            int gi = (int)(color[1] * 255);
-            int bi = (int)(color[2] * 255);
-            int ai = (int)(color[3] * 255);
+            int ri = (int) (color[0] * 255);
+            int gi = (int) (color[1] * 255);
+            int bi = (int) (color[2] * 255);
+            int ai = (int) (color[3] * 255);
 
+            // TODO: Fix Camera API for 1.21.11
+            // Vec3d cameraPos = camera.getPos(); // This method may have been renamed
             Matrix4f mat = new Matrix4f(positionMatrix);
-            mat.translate(-(float)camera.getPos().x, -(float)camera.getPos().y, -(float)camera.getPos().z);
+            // mat.translate(...camera position...);
 
             Set<Edge> edges = new HashSet<>();
 
@@ -92,22 +111,34 @@ public class BlockHighlightRenderer {
                 // エッジが外側 = そのエッジに隣接する2つの面が両方とも外側を向いている
 
                 // 底面の4つのエッジ
-                if (!down && !north) edges.add(new Edge(x0,y0,z0, x1,y0,z0)); // 北側
-                if (!down && !east) edges.add(new Edge(x1,y0,z0, x1,y0,z1));  // 東側
-                if (!down && !south) edges.add(new Edge(x1,y0,z1, x0,y0,z1)); // 南側
-                if (!down && !west) edges.add(new Edge(x0,y0,z1, x0,y0,z0));  // 西側
+                if (!down && !north)
+                    edges.add(new Edge(x0, y0, z0, x1, y0, z0)); // 北側
+                if (!down && !east)
+                    edges.add(new Edge(x1, y0, z0, x1, y0, z1)); // 東側
+                if (!down && !south)
+                    edges.add(new Edge(x1, y0, z1, x0, y0, z1)); // 南側
+                if (!down && !west)
+                    edges.add(new Edge(x0, y0, z1, x0, y0, z0)); // 西側
 
                 // 上面の4つのエッジ
-                if (!up && !north) edges.add(new Edge(x0,y1,z0, x1,y1,z0)); // 北側
-                if (!up && !east) edges.add(new Edge(x1,y1,z0, x1,y1,z1));  // 東側
-                if (!up && !south) edges.add(new Edge(x1,y1,z1, x0,y1,z1)); // 南側
-                if (!up && !west) edges.add(new Edge(x0,y1,z1, x0,y1,z0));  // 西側
+                if (!up && !north)
+                    edges.add(new Edge(x0, y1, z0, x1, y1, z0)); // 北側
+                if (!up && !east)
+                    edges.add(new Edge(x1, y1, z0, x1, y1, z1)); // 東側
+                if (!up && !south)
+                    edges.add(new Edge(x1, y1, z1, x0, y1, z1)); // 南側
+                if (!up && !west)
+                    edges.add(new Edge(x0, y1, z1, x0, y1, z0)); // 西側
 
                 // 縦の4つのエッジ
-                if (!north && !west) edges.add(new Edge(x0,y0,z0, x0,y1,z0)); // 北西
-                if (!north && !east) edges.add(new Edge(x1,y0,z0, x1,y1,z0)); // 北東
-                if (!south && !east) edges.add(new Edge(x1,y0,z1, x1,y1,z1)); // 南東
-                if (!south && !west) edges.add(new Edge(x0,y0,z1, x0,y1,z1)); // 南西
+                if (!north && !west)
+                    edges.add(new Edge(x0, y0, z0, x0, y1, z0)); // 北西
+                if (!north && !east)
+                    edges.add(new Edge(x1, y0, z0, x1, y1, z0)); // 北東
+                if (!south && !east)
+                    edges.add(new Edge(x1, y0, z1, x1, y1, z1)); // 南東
+                if (!south && !west)
+                    edges.add(new Edge(x0, y0, z1, x0, y1, z1)); // 南西
             }
 
             // 太さを表現するために複数レイヤー描画
@@ -116,42 +147,56 @@ public class BlockHighlightRenderer {
 
                 for (Edge e : edges) {
                     // 元の線
-                    vc.vertex(mat, e.x1, e.y1, e.z1).color(ri,gi,bi,ai).texture(0f,0f).overlay(0).light(0xF000F0).normal(0f,1f,0f);
-                    vc.vertex(mat, e.x2, e.y2, e.z2).color(ri,gi,bi,ai).texture(0f,0f).overlay(0).light(0xF000F0).normal(0f,1f,0f);
+                    vc.vertex(mat, e.x1, e.y1, e.z1).color(ri, gi, bi, ai).texture(0f, 0f).overlay(0).light(0xF000F0)
+                            .normal(0f, 1f, 0f);
+                    vc.vertex(mat, e.x2, e.y2, e.z2).color(ri, gi, bi, ai).texture(0f, 0f).overlay(0).light(0xF000F0)
+                            .normal(0f, 1f, 0f);
 
                     if (layer > 0) {
                         // オフセット付きの線を6方向に描画
-                        vc.vertex(mat, e.x1 + layerOffset, e.y1, e.z1).color(ri,gi,bi,ai).texture(0f,0f).overlay(0).light(0xF000F0).normal(0f,1f,0f);
-                        vc.vertex(mat, e.x2 + layerOffset, e.y2, e.z2).color(ri,gi,bi,ai).texture(0f,0f).overlay(0).light(0xF000F0).normal(0f,1f,0f);
+                        vc.vertex(mat, e.x1 + layerOffset, e.y1, e.z1).color(ri, gi, bi, ai).texture(0f, 0f).overlay(0)
+                                .light(0xF000F0).normal(0f, 1f, 0f);
+                        vc.vertex(mat, e.x2 + layerOffset, e.y2, e.z2).color(ri, gi, bi, ai).texture(0f, 0f).overlay(0)
+                                .light(0xF000F0).normal(0f, 1f, 0f);
 
-                        vc.vertex(mat, e.x1 - layerOffset, e.y1, e.z1).color(ri,gi,bi,ai).texture(0f,0f).overlay(0).light(0xF000F0).normal(0f,1f,0f);
-                        vc.vertex(mat, e.x2 - layerOffset, e.y2, e.z2).color(ri,gi,bi,ai).texture(0f,0f).overlay(0).light(0xF000F0).normal(0f,1f,0f);
+                        vc.vertex(mat, e.x1 - layerOffset, e.y1, e.z1).color(ri, gi, bi, ai).texture(0f, 0f).overlay(0)
+                                .light(0xF000F0).normal(0f, 1f, 0f);
+                        vc.vertex(mat, e.x2 - layerOffset, e.y2, e.z2).color(ri, gi, bi, ai).texture(0f, 0f).overlay(0)
+                                .light(0xF000F0).normal(0f, 1f, 0f);
 
-                        vc.vertex(mat, e.x1, e.y1 + layerOffset, e.z1).color(ri,gi,bi,ai).texture(0f,0f).overlay(0).light(0xF000F0).normal(0f,1f,0f);
-                        vc.vertex(mat, e.x2, e.y2 + layerOffset, e.z2).color(ri,gi,bi,ai).texture(0f,0f).overlay(0).light(0xF000F0).normal(0f,1f,0f);
+                        vc.vertex(mat, e.x1, e.y1 + layerOffset, e.z1).color(ri, gi, bi, ai).texture(0f, 0f).overlay(0)
+                                .light(0xF000F0).normal(0f, 1f, 0f);
+                        vc.vertex(mat, e.x2, e.y2 + layerOffset, e.z2).color(ri, gi, bi, ai).texture(0f, 0f).overlay(0)
+                                .light(0xF000F0).normal(0f, 1f, 0f);
 
-                        vc.vertex(mat, e.x1, e.y1 - layerOffset, e.z1).color(ri,gi,bi,ai).texture(0f,0f).overlay(0).light(0xF000F0).normal(0f,1f,0f);
-                        vc.vertex(mat, e.x2, e.y2 - layerOffset, e.z2).color(ri,gi,bi,ai).texture(0f,0f).overlay(0).light(0xF000F0).normal(0f,1f,0f);
+                        vc.vertex(mat, e.x1, e.y1 - layerOffset, e.z1).color(ri, gi, bi, ai).texture(0f, 0f).overlay(0)
+                                .light(0xF000F0).normal(0f, 1f, 0f);
+                        vc.vertex(mat, e.x2, e.y2 - layerOffset, e.z2).color(ri, gi, bi, ai).texture(0f, 0f).overlay(0)
+                                .light(0xF000F0).normal(0f, 1f, 0f);
 
-                        vc.vertex(mat, e.x1, e.y1, e.z1 + layerOffset).color(ri,gi,bi,ai).texture(0f,0f).overlay(0).light(0xF000F0).normal(0f,1f,0f);
-                        vc.vertex(mat, e.x2, e.y2, e.z2 + layerOffset).color(ri,gi,bi,ai).texture(0f,0f).overlay(0).light(0xF000F0).normal(0f,1f,0f);
+                        vc.vertex(mat, e.x1, e.y1, e.z1 + layerOffset).color(ri, gi, bi, ai).texture(0f, 0f).overlay(0)
+                                .light(0xF000F0).normal(0f, 1f, 0f);
+                        vc.vertex(mat, e.x2, e.y2, e.z2 + layerOffset).color(ri, gi, bi, ai).texture(0f, 0f).overlay(0)
+                                .light(0xF000F0).normal(0f, 1f, 0f);
 
-                        vc.vertex(mat, e.x1, e.y1, e.z1 - layerOffset).color(ri,gi,bi,ai).texture(0f,0f).overlay(0).light(0xF000F0).normal(0f,1f,0f);
-                        vc.vertex(mat, e.x2, e.y2, e.z2 - layerOffset).color(ri,gi,bi,ai).texture(0f,0f).overlay(0).light(0xF000F0).normal(0f,1f,0f);
+                        vc.vertex(mat, e.x1, e.y1, e.z1 - layerOffset).color(ri, gi, bi, ai).texture(0f, 0f).overlay(0)
+                                .light(0xF000F0).normal(0f, 1f, 0f);
+                        vc.vertex(mat, e.x2, e.y2, e.z2 - layerOffset).color(ri, gi, bi, ai).texture(0f, 0f).overlay(0)
+                                .light(0xF000F0).normal(0f, 1f, 0f);
                     }
                 }
             }
 
-            immediate.draw(RenderLayer.getLines());
-
-            GL11.glDepthMask(true);
+            // TODO: Replace with correct draw call for 1.21.11
+            // immediate.draw(RenderLayer.???);
             GL11.glEnable(GL11.GL_DEPTH_TEST);
         } catch (Throwable t) {
             OreMiner.LOGGER.error("Error rendering highlights", t);
             try {
                 GL11.glDepthMask(true);
                 GL11.glEnable(GL11.GL_DEPTH_TEST);
-            } catch (Throwable ignored) {}
+            } catch (Throwable ignored) {
+            }
         }
     }
 
@@ -160,25 +205,43 @@ public class BlockHighlightRenderer {
         private final int hash;
 
         Edge(float x1, float y1, float z1, float x2, float y2, float z2) {
-            if (cmp(x1,y1,z1, x2,y2,z2) <= 0) {
-                this.x1=x1; this.y1=y1; this.z1=z1; this.x2=x2; this.y2=y2; this.z2=z2;
+            if (cmp(x1, y1, z1, x2, y2, z2) <= 0) {
+                this.x1 = x1;
+                this.y1 = y1;
+                this.z1 = z1;
+                this.x2 = x2;
+                this.y2 = y2;
+                this.z2 = z2;
             } else {
-                this.x1=x2; this.y1=y2; this.z1=z2; this.x2=x1; this.y2=y1; this.z2=z1;
+                this.x1 = x2;
+                this.y1 = y2;
+                this.z1 = z2;
+                this.x2 = x1;
+                this.y2 = y1;
+                this.z2 = z1;
             }
             hash = Objects.hash(this.x1, this.y1, this.z1, this.x2, this.y2, this.z2);
         }
 
-        int cmp(float ax,float ay,float az, float bx,float by,float bz) {
-            int c = Float.compare(ax,bx); if(c!=0)return c;
-            c = Float.compare(ay,by); if(c!=0)return c;
-            return Float.compare(az,bz);
+        int cmp(float ax, float ay, float az, float bx, float by, float bz) {
+            int c = Float.compare(ax, bx);
+            if (c != 0)
+                return c;
+            c = Float.compare(ay, by);
+            if (c != 0)
+                return c;
+            return Float.compare(az, bz);
         }
 
-        public int hashCode() { return hash; }
+        public int hashCode() {
+            return hash;
+        }
+
         public boolean equals(Object o) {
-            if(!(o instanceof Edge))return false;
-            Edge e=(Edge)o;
-            return x1==e.x1 && y1==e.y1 && z1==e.z1 && x2==e.x2 && y2==e.y2 && z2==e.z2;
+            if (!(o instanceof Edge))
+                return false;
+            Edge e = (Edge) o;
+            return x1 == e.x1 && y1 == e.y1 && z1 == e.z1 && x2 == e.x2 && y2 == e.y2 && z2 == e.z2;
         }
     }
 }
